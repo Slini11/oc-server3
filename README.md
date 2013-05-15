@@ -1,3 +1,10 @@
+Sweden / Norway migration
+=========================
+
+This code branch ("seno") is used for migrating opencaching.se/opencaching.no to OC.de code only.
+Please refer to the "stable" and "master" branches if you want to use OC.de code somewhere else!
+
+
 Opencaching.de Code Repository
 ==============================
 
