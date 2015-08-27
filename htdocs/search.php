@@ -32,6 +32,7 @@
 		searchbynofilter
 		searchbycacheid
 		searchbywp
+		searchbylist
 		searchall  (needs login)
 
 	output options:
@@ -241,6 +242,7 @@
 			// external searches.
 		$options['f_ignored'] = isset($_REQUEST['f_ignored']) ? $_REQUEST['f_ignored'] : 1;
 		$options['f_otherPlatforms'] = isset($_REQUEST['f_otherPlatforms']) ? $_REQUEST['f_otherPlatforms'] : 0;
+		$options['f_geokrets'] = isset($_REQUEST['f_geokrets']) ? $_REQUEST['f_geokrets'] : 0;
 		$options['expert'] = isset($_REQUEST['expert']) ? $_REQUEST['expert'] : 0;  // Ocprop: 0
 		$options['showresult'] = isset($_REQUEST['showresult']) ? $_REQUEST['showresult'] : 0;
 		$options['output'] = isset($_REQUEST['output']) ? $_REQUEST['output'] : 'HTML';  // Ocprop: HTML
@@ -380,6 +382,18 @@
 		{
 			$options['searchtype'] = 'bynofilter';
 		}
+		elseif (isset($_REQUEST['searchbylist']))
+		{
+			$options['searchtype'] = 'bylist';
+			$options['listid'] = isset($_REQUEST['listid']) ? $_REQUEST['listid'] + 0 : 0;
+
+			$password = isset($_REQUEST['listkey']) ? $_REQUEST['listkey'] : '';
+			$list = new cachelist($options['listid']);
+			if (!$list->allowView($password))
+				$tpl->redirect("cachelists.php");
+			$options['cachelist'] = cachelist::getListById($options['listid']);  // null for invalid ID
+			$options['cachelist_pw'] = $password;
+		}
 		elseif (isset($_REQUEST['searchall']))
 		{
 			if (!$login->logged_in())
@@ -479,6 +493,7 @@
 	if (!isset($options['cachesize'])) $options['cachesize'] = '';
 	if (!isset($options['bbox'])) $options['bbox'] = false;
 	if (!isset($options['f_disabled'])) $options['f_disabled'] = 0;
+	if (!isset($options['f_geokrets'])) $options['f_geokrets'] = 0;
 
 	if (!isset($options['showresult'])) $options['showresult'] = 0;
 	if ($options['showresult'] == 1)
@@ -628,7 +643,7 @@
 					if ($locid == 0)
 					{
 						$ort = $options['ort'];
-						$simpletexts = search_text2sort($ort);
+						$simpletexts = search_text2sort($ort,true);
 						$simpletextsarray = explode_multi($simpletexts, ' -/,');
 
 						$sqlhashes = '';
@@ -966,6 +981,32 @@
 				$sql_select[] = '`caches`.`cache_id` `cache_id`';
 				$sql_from = '`caches`';
 			}
+			elseif ($options['searchtype'] == 'bylist')
+			{
+				sql_temp_table_slave('result_caches');
+				$list = new cachelist($options['listid']);
+				if ($list->allowView($options['cachelist_pw']))
+				{
+					$cachesFilter =
+									 "CREATE TEMPORARY TABLE &result_caches ENGINE=MEMORY
+										SELECT `cache_id` FROM `cache_list_items`
+										LEFT JOIN `cache_lists` ON `cache_lists`.`id`=`cache_list_items`.`cache_list_id`
+									  WHERE `cache_list_id`=" . sql_escape($options['listid']);
+					sql_slave($cachesFilter);
+					sql_slave('ALTER TABLE &result_caches ADD PRIMARY KEY ( `cache_id` )');
+
+					$sql_select[] = '&result_caches.`cache_id`';
+					$sql_from = '&result_caches';
+					$sql_innerjoin[] = '`caches` ON `caches`.`cache_id`=&result_caches.`cache_id`';
+				}
+				else
+				{
+					// should not happen, but just for the case ...
+					$sql_select[] = '`caches`.`cache_id` `cache_id`';
+					$sql_from = '`caches`';
+					$sql_where[] = 'FALSE';
+				}
+			}
 			else if ($options['searchtype'] == 'all')
 			{
 				$sql_select[] = '`caches`.`cache_id` `cache_id`';
@@ -1015,6 +1056,12 @@
 				// $sql_where[] = '`caches`.`wp_nc`=\'\' AND `caches`.`wp_gc`=\'\'';
 				// ignore NC listings, which are mostly unmaintained or dead
 				$sql_where[] = "`caches`.`wp_gc_maintained`=''";
+			}
+
+			if (!isset($options['f_geokrets'])) $options['f_geokrets']='0';
+			if ($options['f_geokrets'] != 0)
+			{
+				$sql_where[] = "(SELECT COUNT(*) FROM `gk_item_waypoint` WHERE `wp`=`caches`.`wp_oc`)";
 			}
 
 			if (!isset($options['country'])) $options['country']='';
@@ -1477,6 +1524,9 @@ function outputSearchForm($options)
 
 	$tpl->assign('f_otherPlatforms_checked', $options['f_otherPlatforms'] == 1);
 	$tpl->assign('hidopt_otherPlatforms', ($options['f_otherPlatforms'] == 1) ? '1' : '0');
+
+	$tpl->assign('f_geokrets_checked', $options['f_geokrets'] == 1);
+	$tpl->assign('hidopt_geokrets', ($options['f_geokrets'] == 1) ? '1' : '0');
 
 	if (isset($options['country']))
 	{

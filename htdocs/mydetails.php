@@ -102,7 +102,12 @@ function changetext()
 	{
 		$purifier = new OcHTMLPurifier($opt);
 		$desctext = isset($_REQUEST['desctext']) ? $purifier->purify($_REQUEST['desctext']) : "";
-		sql("UPDATE `user` SET `description`='&2' WHERE `user_id`='&1'", $login->userid, $desctext);
+		$desc_htmledit = isset($_REQUEST['descMode']) && $_REQUEST['descMode'] == '2' ? '0' : '1';
+		sql("
+			UPDATE `user`
+			SET `description`='&2', `desc_htmledit`='&3'
+			WHERE `user_id`='&1'",
+			$login->userid, $desctext, $desc_htmledit);
 	  $tpl->redirect('mydetails.php');
 	}
 	else
@@ -161,6 +166,7 @@ function assignFromDB($userid,$include_editor)
 			$tpl->add_header_javascript('resource2/tinymce/tiny_mce_gzip.js');
 			$tpl->add_header_javascript('resource2/tinymce/config/user.js.php?lang='.strtolower($opt['template']['locale']));
 		}
+		$tpl->add_header_javascript('templates2/' . $opt['template']['style'] . '/js/editor.js');
 		$tpl->assign('descMode',$descMode);
 	}
 }

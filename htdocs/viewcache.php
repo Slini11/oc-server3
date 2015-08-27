@@ -11,6 +11,7 @@
 	require_once('./lib2/logic/labels.inc.php');
 	require_once('./lib2/logic/cache.class.php');
 	require_once('./lib2/logic/attribute.class.php');
+	require_once('./lib2/logic/cachelist.class.php');
 	require_once('./lib2/logic/coordinate.class.php');
 	require_once('./lib2/logic/useroptions.class.php');
 	require_once('./lib2/logic/logpics.inc.php');
@@ -107,6 +108,7 @@ function getChildWaypoints($cacheid)
 				`caches`.`is_publishdate` AS `is_publishdate`,
 				`caches`.`difficulty` AS `difficulty`,
 				`caches`.`terrain` AS `terrain`,
+				`caches`.`show_cachelists` AS `show_cachelists`,
 				`cache_desc`.`language` AS `desclanguage`,
 				`cache_desc`.`short_desc` AS `shortdesc`,
 				`cache_desc`.`desc` AS `desc`,
@@ -173,7 +175,18 @@ function getChildWaypoints($cacheid)
 
 	$rCache['adminlog'] = !$rCache['log_allowed'] && ($login->admin & ADMIN_USER);
 
-	$rCache['desclanguages'] = explode(',', $rCache['desclanguages']);
+	$rs = sql("
+		SELECT `short` `code`, `native_name`, `stt`.`text` AS `name`
+		FROM `languages`
+		JOIN `cache_desc` ON `cache_desc`.`language`=`languages`.`short`
+		LEFT JOIN `sys_trans_text` `stt` ON `stt`.`trans_id`=`languages`.`trans_id` AND `stt`.`lang`='&2'
+		WHERE `cache_desc`.`cache_id`='&1'",
+		$cacheid, $opt['template']['locale']);
+	$desclanguages = sql_fetch_assoc_table($rs);
+	if (count($desclanguages) == 1 && $desclanguages[0]['code'] == $opt['template']['locale'])
+		$rCache['desclanguages'] = array();
+	else
+		$rCache['desclanguages'] = $desclanguages;
 
 	$rCache['sizeName'] = labels::getLabelValue('cache_size', $rCache['size']);
 	$rCache['statusName'] = labels::getLabelValue('cache_status', $rCache['status']);
@@ -240,7 +253,7 @@ function getChildWaypoints($cacheid)
 	if (isset($logs[$rscount])) 
 	{
 		unset($logs[$rscount]);
-		$tpl->assign('showalllogs', true);
+		$tpl->assign('morelogs', true);
 	}
 	$loganz = sizeof($logs);
 	$tpl->assign('logs', $logs);
@@ -272,9 +285,12 @@ function getChildWaypoints($cacheid)
 	$tpl->assign_rs('npaareasNoWarning', $rs);
 	sql_free_result($rs);
 
-	/* attributes
+	/* attributes and cache lists
 	 */
 	$tpl->assign('attributes', attribute::getAttrbutesListArrayByCacheId($cacheid));
+	$tpl->assign('cachelists', cachelist::getListsByCacheId($cacheid, $rCache['show_cachelists']));
+	$tpl->assign('watchclinfo', isset($_REQUEST['watchinfo']) && $_REQUEST['watchinfo'] == 1 && 
+	                            cachelist::watchingCacheByListsCount($login->userid, $cacheid) > 0);
 
 	/* geokrets
 	 */
@@ -321,7 +337,7 @@ function getChildWaypoints($cacheid)
 	}
 	else
 	{
-		$autoload_logs = false;
+		$autoload_logs = true;
 	}
 	$tpl->assign('userzoom', $userzoom);
 	$tpl->assign('autoload_logs', $autoload_logs);
@@ -344,6 +360,7 @@ function getChildWaypoints($cacheid)
 
 	$tpl->assign('shortlink_domain', $opt['logic']['shortlink_domain']);
 	$tpl->assign('listing_admin', $login->listingAdmin());
+	$tpl->assign('npahelplink', helppagelink('npa'));
 
 	// display the page
 	$tpl->display();

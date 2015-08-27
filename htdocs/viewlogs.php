@@ -3,8 +3,6 @@
  *  For license information see doc/license.txt
  *
  *  Unicode Reminder メモ
- *
- *  Display some status information about the server and Opencaching
  ***************************************************************************/
 
 	require('./lib2/web.inc.php');
@@ -52,11 +50,13 @@
 	if ($cache_id != 0)
 	{ 
 		//get cache record
-		$rs = sql("SELECT `caches`.`cache_id`, `caches`.`wp_oc` AS `wpoc`, 
+		$rs = sql("SELECT `caches`.`cache_id`, `caches`.`wp_oc` AS `wpoc`, `caches`.`cache_id` AS `cacheid`, 
 											`caches`.`user_id` AS `userid`, `caches`.`name`, 
 											`caches`.`status` AS `status`,
+											`caches`.`type` AS `type`,
 											IFNULL(`stat_caches`.`found`, 0) AS `found`, 
 											IFNULL(`stat_caches`.`notfound`, 0) AS `notfound`, 
+											IFNULL(`stat_caches`.`will_attend`, 0) AS `willattend`,
 											IFNULL(`stat_caches`.`note`, 0) AS `note`, 
 											`cache_status`.`allow_user_view` 
 							 FROM `caches` 

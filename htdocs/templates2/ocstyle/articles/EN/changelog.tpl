@@ -15,6 +15,88 @@
 
 	<div class="changelog-changes">
 
+	<p id="v3.0.13"><strong>OC 3.0 Release 13</strong> &ndash; July 4, 2015</p>
+	<p>New:</p>
+	<ul>
+		<li><a href="cachelists.php">Cache lists</a></li>
+		<li>Filtering option for Caches with Geokrets in cache search and on the map</i></li>
+		<li>Link to Safari caches list on the map</li>
+	</ul>
+
+	<p>Changed / improved:</p>
+	<ul>
+		<li>Pictures up to 250 KB size stay unchanged; only pictures &gt; 250 KB will be resized.</li>
+		<li>To publish an unplished cache, only the "publish now" option at the bottom of the listing needs to be changed.</li>
+		<li>Watch and ignore lists of disabled user accounts are deleted.</li>
+		<li>some design improvements</li>
+		<li>Update OC countries list: The Rumanian site is new, Sweden/Norway was shut down.</li>
+		<li>internal improvements for the data maintenance team</li>
+	</ul>
+
+	<p>Fixed:</p>
+	<ul>
+		<li>more reliable hiding of GC crosslistings in the cache search and on the map [bug of release 9]</li>
+		<li>fixed new cache marks in the search results lists [bug of release 9]</li>
+		<li>fixed attributes display in Internet Explorer [bug of release 11]</li>
+		<li>fixed event icons in log statistics</li>
+		<li>fixed GC and NC waypoint input [bug of release 12]</li>
+	</ul>
+	</p>
+
+	<p id="v3.0.12"><strong>OC 3.0 Release 12</strong> &ndash; May 31, 2015</p>
+	<p>New:</p>
+	<ul>
+		<li>"more..." link in the start page event list, if there are more than ten events or events in other countries</li>
+		<li>The "Convert coordinates" link in cache listings shows <i>what3words</i> coordinates.</i></li>
+		<li>search for <i>what3words</i> coordinates on the map</li>
+		<li>new <a href="myprofile.php">user profile setting</a> to include the own e-mail address by default when writing to other users</li>
+		<li><a href="okapi">OKAPI</a>: added experimental support for the new Garmin GGZ data format</li>
+	</ul>
+
+	<p>Changed / improved:</p>
+	<ul>
+		<li>protection against accidential duplicate cache listings</li>
+		<li>GC waypoint input in cache listings checks for valid waypoint format</li>
+		<li>Notification e-mails for deleted logs now include the log date and type.</li>
+		<li>The last entered log date will be used as default for only 12 hours; then the current date is proposed for new logs.</li>
+		<li>Personal cache notes are saved even if the entered coordinate is invalid.</li>
+		<li>updated information on Opencaching Deutschland e.V.</li>
+	</ul>
+
+	<p>Fixed:</p>
+	<ul>
+		<li>fixed "Send to GPS device" button in cache listings</li>
+		<li>Disabled events are automatically archived after one year like all caches. [bug of release 9]</li>
+		<li>added missing e-mail address in e-mails to other users</li>
+		<li>fixed language switch on www.opencaching.it and www.opencachingspain.es [problem since release 10]</li>
+		<li>some OKAPI fixes (&rarr; <a href="https://code.google.com/p/opencaching-api/source/list">changelog</a>)</li>
+	</ul>
+	</p>
+
+	<p id="v3.0.11"><strong>OC 3.0 Release 11</strong> &ndash; June 21, 2014</p>
+	<p>New:</p>
+	<ul>
+		<li>get direct link to a specific log entry by right-clicking on its symbol and choosing "copy hyperlink"</li>
+		<li>automatically shrink images on upload</li>
+		<li>confirmation before deleting pictures</li>
+		<li>show link "Nearby search at geocaching.com" in admin area for reported caches</li>
+		<li>user option for receiving the OC newsletter (or not)</li>
+	</ul>
+
+	<p>Changed / improved:</p>
+	<ul>
+		<li>improved button design in IE</li>
+		<li>link to listing on listing page with http:// for better use on webpages</li>
+	</ul>
+
+	<p>Fixed:</p>
+	<ul>
+		<li>fixed positioining of help button in IE</li>
+		<li>fixed generation of direct link to log entry after loading all logs</li>
+		<li>fixed a few typos in german translation and teamlist</li>
+	</ul>
+	<br />
+
 	<p id="v3.0.10"><strong>OC 3.0 Release 10</strong> &ndash; August 24, 2013</p>
 	<p>New:</p>
 	<ul>

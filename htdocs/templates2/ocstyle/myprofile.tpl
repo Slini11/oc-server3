@@ -5,7 +5,7 @@
  ***************************************************************************}
 {* OCSTYLE *}
 <div class="content2-pagetitle">
-	<img src="resource2/{$opt.template.style}/images/profile/32x32-profile.png" style="align: left; margin-right: 10px;" width="32" height="32" alt="" />
+	<img src="resource2/{$opt.template.style}/images/profile/32x32-profile.png" style="margin-right: 10px;" width="32" height="32" alt="" />
 	{t}My profile data{/t}
 </div>
 
@@ -136,8 +136,26 @@
 				</td>
 			</tr>
 			<tr><td class="spacer" colspan="2"></td></tr>
+			
+			<tr>
+				<td valign="top">{t}Newsletter:{/t}</td>
+				<td valign="top">
+					{if $edit==true}
+						<input type="checkbox" name="accMailing" value="1" {if $accMailing==true}checked="checked"{/if} id="acc_Mailing" class="checkbox" /> 
+						<label for="acc_Mailing">{t}Please send me mailings about news and actions on opencaching.de. (max. 2-5 per year){/t}</label>
+						<br />
+					{else}
+						{if $accMailing==true}
+							{t}Yes, I want to recieve mailings about news and actions on opencaching.de. (max. 2-5 per year){/t}<br />
+						{else}
+							{t}No, I dont't want any mailings about news and actions on opencaching.de.{/t}
+						{/if}
+					{/if}
+				</td>
+			</tr>
+			<tr><td class="spacer" colspan="2"></td></tr>
 
-			{if $edit || $usePMR || $permanentLogin || $noHTMLEditor}
+			{if $edit || $usePMR || $permanentLogin || $noHTMLEditor || $sendUsermailAddress }
 			<tr>
 				<td valign="top">{t}Others:{/t}</td>
 				<td valign="top">
@@ -164,12 +182,21 @@
 						{/if}
 					{/if}
 					{if $edit==true}
-						<input type="checkbox" name="noHTMLEditor" value="1" {if $noHTMLEditor==true}checked="checked"{/if} id="l_no_htmledit" class="checkbox" /> 
-						<label for="l_no_htmledit">{t}Don't use an HTML editor by default.{/t}</label>
+						<input type="checkbox" name="noWysiwygEditor" value="1" {if $noWysiwygEditor==true}checked="checked"{/if} id="l_no_wysiwyg_edit" class="checkbox" /> 
+						<label for="l_no_wysiwyg_edit">{t}Use simple HTML editor by default.{/t}</label>
 						<br />
 					{else}
-						{if $noHTMLEditor}
-							{t}Don't use an HTML editor by default.{/t}
+						{if $noWysiwygEditor}
+							{t}Use simple HTML editor by default.{/t}
+						{/if}
+					{/if}
+					{if $edit==true}
+						<input type="checkbox" name="sendUsermailAddress" value="1" {if $sendUsermailAddress==true}checked="checked"{/if} id="l_send_usermail_address" class="checkbox" />
+						<label for="l_send_usermail_address">{t}Disclose my e-mail address by default when sending e-mails to other users.{/t}</label>
+						<br />
+					{else}
+						{if $sendUsermailAddress}
+							{t}Disclose my e-mail address by default when sending e-mails to other users.{/t}
 						{/if}
 					{/if}
 				</td>
@@ -178,7 +205,7 @@
 			{/if}
 
 			<tr>
-				<td class="public-setting">{t}Registered since{/t}:</td>
+				<td class="public-setting">{t}Registered since:{/t}</td>
 				<td class="public-setting">{$registeredSince|date_format:$opt.format.datelong}</td>
 			</tr>
 

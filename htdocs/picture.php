@@ -121,16 +121,27 @@
 			
 			if ($bError == false)
 			{
-				$picture->setFilenames($_FILES['file']['name']);
 				$picture->setLocal(1);
+				$fname = pathinfo($_FILES['file']['name'], PATHINFO_FILENAME);
+				$ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
 
-				// try saving file and record
-				if (!move_uploaded_file($_FILES['file']['tmp_name'], $picture->getFilename()))
+				// try saving file if smaller unchg_size and browser native format
+				if (in_array(mb_strtolower($ext), array('gif','png','jpg','jpeg'))
+				    && ($_FILES['file']['size'] <= $opt['logic']['pictures']['unchg_size']))
 				{
-					$tpl->assign('errorfile', ERROR_UPLOAD_UNKNOWN);
-					$bError = true;
+					$picture->setFilenames($_FILES['file']['name']);
+					if (!$picture->rotate($_FILES['file']['tmp_name']))
+						$bError = true;
 				}
-				else if ($picture->save())
+				// try saving as jpg and shrinking if > PICTURE_MAX_LONG_SIDE file
+				else
+				{
+					$picture->setFilenames(mb_strtolower($fname).'.jpg');
+					if (!$picture->rotate_and_shrink($_FILES['file']['tmp_name'], PICTURE_MAX_LONG_SIDE))
+					  $bError = true;
+				}
+				// try to save in db
+				if (!$bError && $picture->save())
 				{
 					if ($redirect == '')
 						$redirect = $picture->getPageLink();

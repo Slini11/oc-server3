@@ -9,7 +9,7 @@
 {/capture}
 {if $success==true}
 	<div class="content2-pagetitle">
-		<img src="resource2/{$opt.template.style}/images/misc/22x22-email.png" style="align: left; margin-right: 10px;" width="32" height="32" alt="" />
+		<img src="resource2/{$opt.template.style}/images/misc/22x22-email.png" style="margin-right: 10px;" width="32" height="32" alt="" />
 		{t 1=$smarty.capture.userlink}E-Mail to %1 was sent{/t}
 	</div>
 
@@ -32,7 +32,7 @@
 	<form action="mailto.php" method="post">
 		<input type="hidden" name="userid" value="{$userid}"/>
 		<div class="content2-pagetitle">
-			<img src="resource2/{$opt.template.style}/images/misc/22x22-email.png" style="align: left; margin-right: 10px;" width="32" height="32" alt="" />
+			<img src="resource2/{$opt.template.style}/images/misc/22x22-email.png" style="margin-right: 10px;" width="32" height="32" alt="" />
 			{t 1=$smarty.capture.userlink}Send E-Mail to %1{/t}
 		</div>
 
@@ -76,7 +76,7 @@
 			<tr>
 				<td class="help" colspan="2">
 					<img src="resource2/{$opt.template.style}/images/misc/hint.gif" border="0" width="15" height="11" align="middle" /> 
-					{t}This enables the receiver to answer your E-Mail directly with his E-Mail agent.{/t}<br />
+					{t}This enables the receiver to answer your E-Mail directly with his E-Mail agent. You may enable this option by default in your <a href="myprofile.php">user profile</a>.{/t}<br />
 					<div style="padding: 10px 0 10px 0">
 						<img src="resource2/{$opt.template.style}/images/misc/hint.gif" border="0" width="15" height="11" align="middle" />
 						<span class="smalltext">{t}To protect you and us from abuse:{/t}</span>

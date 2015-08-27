@@ -156,6 +156,7 @@
 
   // see config2/settings-dist.inc.php
 	$opt['template']['default']['locale'] = 'DE';      // may be overwritten by $opt['domain'][...]['locale']
+	$opt['template']['default']['fallback_locale'] = 'EN';   // may be overwritten by $opt['domain'][...]['article_locale']
 
   // include all locale settings
   require_once($rootpath . 'config2/locale.inc.php');
@@ -178,14 +179,17 @@
 	$opt['db']['slave']['primary'] = -1;
 
 	$opt['template']['locales']['DA']['show'] = false;
-	$opt['template']['locales']['FR']['show'] = false;
 	$opt['template']['locales']['JA']['show'] = false;
 	$opt['template']['locales']['NL']['show'] = false;
 	$opt['template']['locales']['PL']['show'] = false;
 	$opt['template']['locales']['PT']['show'] = false;
 	$opt['template']['locales']['RU']['show'] = false;
+	$opt['template']['locales']['SV']['show'] = false;
+	$opt['template']['locales']['NO']['show'] = false;
 
-	// info on nature protection areas
-	$opt['cms']['npa'] = 'http://wiki.opencaching.de/index.php/Schutzgebiete';
+	/*
+	 * html purifier
+	 */
+	$opt['html_purifier']['cache_path'] = dirname(__FILE__).'/../cache2/html_purifier/';
 
 ?>

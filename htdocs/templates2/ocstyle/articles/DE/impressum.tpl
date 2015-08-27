@@ -4,7 +4,7 @@
 *  Unicode Reminder メモ
 ***************************************************************************}
 <div class="content2-pagetitle">
-	<img src="resource2/{$opt.template.style}/images/misc/32x32-impressum.png" style="align: left; margin-right: 10px;" width="32" height="32" alt="" /> Impressum
+	<img src="resource2/{$opt.template.style}/images/misc/32x32-impressum.png" style="margin-right: 10px;" width="32" height="32" alt="" /> Impressum
 </div>
 
 <p><em>(Anbieterkennzeichnungspflicht)</em></p>
@@ -30,7 +30,7 @@
 	</p>
 	<p>
 		Um die Entwicklung von Anwendungen und Diensten f&uuml;r das Geocaching zu 
-		f&ouml;rdern, bietet Opencaching alle Stammdaten in einer einfach zu 
+		f&ouml;rdern, bietet Opencaching.de alle Stammdaten in einer einfach zu 
 		verarbeitenden Form zum Download an. Dabei sind die geltenden Datenschutzhinweise 
 		sowie Nutzungsbedingungen zu beachten.
 	</p>
@@ -63,10 +63,10 @@
 	<p>
 		Opencaching Deutschland e.V.<br />
 		c/o Michael Vaahsen<br />
-		Hattsteiner Allee 26<br />
-		61250 Usingen<br />
+		Am Weiherboden 21a<br />
+		61276 Weilrod<br />
 		<br />
-		Telefon: 0 60 81 / 912 87 57<br />
+		Telefon: 0 60 83 / 32 99 654<br />
 		E-Mail: verein@opencaching.de<br />
 		<br />
 	</p>
@@ -80,13 +80,13 @@
 		Vorstandes gemeinsam vertretungsberechtigt.
 	</p>
 	<p>
-		Der gesch&auml;ftsf&uuml;hrende Vorstand besteht aus (Stand 06.06.2013):
+		Der gesch&auml;ftsf&uuml;hrende Vorstand besteht aus (Stand 26.11.2013):
 	</p>
 	<p>
 		<ul class="indent narrowlist">
 			<li>Michael Vaahsen, Vorsitzender</li>
 			<li>Mirco Baumann, 2. Vorsitzender</li>
-			<li>Maik Bischoff, Kassenwart</li>
+			<li>Christoph Convent, Kassenwart</li>
 		</ul>
 	</p>
 	

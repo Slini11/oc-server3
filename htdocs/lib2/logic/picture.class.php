@@ -401,12 +401,12 @@ class picture
 		$this->setArchiveFlag($restore);
 		sql("DELETE FROM `pictures` WHERE `id`='&1'", $this->nPictureId);
 		$this->resetArchiveFlag();
+		$filename = $this->getFilename();
 
 		// archive picture if picture record has been archived
 		if (sql_value("SELECT `id` FROM `pictures_modified` WHERE `id`='&1'",
 		              0, $this->getPictureId()) != 0)
 		{
-			$filename = $this->getFilename();
 			@rename($filename, $this->deleted_filename($filename));
 		}
 		else
@@ -452,6 +452,112 @@ class picture
 			$pl .= "#log" . urlencode($this->getLogId());
 		}
 		return $pl;
+	}
+    /*
+        Shrink picture to a specified maximum size. If present Imagemagick extension will be used, if not gd.
+        Imagick is sharper, faster, need less memory and supports more types.
+        For gd size is limited to 5000px (memory consumption).
+        i prefer FILTER_CATROM because its faster but similiar to lanczos see http://de1.php.net/manual/de/imagick.resizeimage.php
+        parameter:
+        $tmpfile: full name of uploaded file
+        $longSideSize:  if longer side of picture > $longSideSize, then it will be prop. shrinked to
+        returns: true if no error occur, otherwise false
+    */
+    public function rotate_and_shrink($tmpFile,$longSideSize)
+    {
+        global $opt;
+        if (extension_loaded('imagick')) {
+            try {
+                $image = new Imagick();
+                $image->readImage($tmpFile);
+                $this->imagick_rotate($image);
+                $w=$image->getImageWidth();
+                $h=$image->getImageHeight();
+                $image->setImageResolution(PICTURE_RESOLUTION,PICTURE_RESOLUTION);
+                $image->setImageCompression(Imagick::COMPRESSION_JPEG);
+                $image->setImageCompressionQuality(PICTURE_QUALITY);
+                $image->stripImage(); //clears exif, private data
+                //$newSize=$w<$h?array($w*$longSideSize/$h,$longSideSize):array($longSideSize,$h*$longSideSize/$w);
+                if (max($w,$h)>$longSideSize)
+                    $image->resizeImage($longSideSize,$longSideSize,imagick::FILTER_CATROM,1,true);
+                $result=$image->writeImage($this->getFilename());
+                $image->clear();
+            }
+            catch (Exception $e){
+                if ($image)$image->clear();
+                if($opt['debug'] & DEBUG_DEVELOPER)die($e);
+                $result=false;
+            }
+            return $result;
+        }
+        else if (extension_loaded('gd')) {
+            $imageNew=null;
+            try{
+              $image = imagecreatefromstring(file_get_contents($tmpFile)); ;
+              $w=imagesx($image);
+              $h=imagesy($image);
+              if (max($w,$h)>5000)throw new Exception("Image too large >5000px");
+              if (max($w,$h)<=$longSideSize)
+                $result=imagejpeg($image,$this->getFilename(),PICTURE_QUALITY);
+              else {
+                  $newSize=$w<$h?array($w*$longSideSize/$h,$longSideSize):array($longSideSize,$h*$longSideSize/$w);
+                  $imageNew = imagecreatetruecolor($newSize[0], $newSize[1]);
+                  imagecopyresampled($imageNew, $image, 0, 0, 0, 0,$newSize[0], $newSize[1], $w, $h);
+                  $result=imagejpeg($imageNew,$this->getFilename(),PICTURE_QUALITY);
+                  imagedestroy($imageNew);
+              }
+              imagedestroy($image);
+            }
+            catch (Exception $e){
+                if ($image)imagedestroy($image);
+                if ($imageNew)imagedestroy($imageNew);
+                if($opt['debug'] & DEBUG_DEVELOPER)die($e);
+                $result=false;
+            }
+            return $result;
+
+        }
+        else return false;
+    }
+
+	// rotate image according to EXIF orientation
+	public function rotate($tmpFile)
+	{
+		if (extension_loaded('imagick'))
+		{
+			try
+			{
+				$image = new Imagick();
+				$image->readImage($tmpFile);
+				if ($this->imagick_rotate($image))
+				{
+					$image->stripImage(); // clears exif, private data
+					$image->writeImage($this->getFilename());
+					$image->clear();
+					return true;
+				}
+				else
+					$image->clear();
+			}
+			catch (Exception $e)
+			{
+				if ($image) $image->clear();
+			}
+		}
+		return move_uploaded_file($tmpFile, $this->getFilename());
+	}
+
+	function imagick_rotate(&$image)
+	{
+		$exif = $image->getImageProperties();
+		if (isset($exif['exif:Orientation']))
+			switch ($exif['exif:Orientation'])
+			{
+				case 3: return $image->rotateImage(new ImagickPixel(), 180);
+				case 6: return $image->rotateImage(new ImagickPixel(), 90);
+				case 8: return $image->rotateImage(new ImagickPixel(), -90);
+			}
+		return false;
 	}
 
 }

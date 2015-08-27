@@ -62,6 +62,7 @@ class user
 		$this->reUser->addString('last_name', '', false);
 		$this->reUser->addString('first_name', '', false);
 		$this->reUser->addString('country', null, true);
+		$this->reUser->addBoolean('accept_mailing', false, false);
 		$this->reUser->addBoolean('pmr_flag', false, false);
 		$this->reUser->addString('new_pw_code', null, true);
 		$this->reUser->addDate('new_pw_date', null, true);
@@ -77,6 +78,7 @@ class user
 		$this->reUser->addInt('watchmail_day', 0, false);
 		$this->reUser->addString('activation_code', '', false);
 		$this->reUser->addBoolean('no_htmledit_flag', false, false);
+		$this->reUser->addBoolean('usermail_send_addr', false, false);
 		$this->reUser->addInt('notify_radius', 0, false);
 		$this->reUser->addInt('notify_oconly', 1, false);
 		$this->reUser->addInt('admin', 0, false);
@@ -255,11 +257,27 @@ class user
 	{
 		return $this->reUser->setValue('permanent_login_flag', $value);
 	}
-	function getNoHTMLEditor()
+	function getAccMailing()
+	{
+		return $this->reUser->getValue('accept_mailing');
+	}
+	function setAccMailing($value)
+	{
+		return $this->reUser->setValue('accept_mailing', $value);
+	}
+	function getUsermailSendAddress()
+	{
+		return $this->reUser->getValue('usermail_send_addr');
+	}
+	function setUsermailSendAddress($value)
+	{
+		return $this->reUser->setValue('usermail_send_addr', $value);
+	}
+	function getNoWysiwygEditor()
 	{
 		return $this->reUser->getValue('no_htmledit_flag');
 	}
-	function setNoHTMLEditor($value)
+	function setNoWysiwygEditor($value)
 	{
 		return $this->reUser->setValue('no_htmledit_flag', $value);
 	}
@@ -439,12 +457,12 @@ class user
 	{
 		$bNeedStatpicClear = $this->reUser->getChanged('username');
 
+		sql_slave_exclude();
 		if ($this->reUser->save())
 		{
 			if ($this->getUserId() == ID_NEW)
 				$this->nUserId = $this->reUser->getValue('user_id');
 			$this->getStatpic()->invalidate();
-			sql_slave_exclude();
 			return true;
 		}
 		else
@@ -731,7 +749,7 @@ class user
 		sql("UPDATE `user` SET `password`=NULL, `email`=NULL, 
 		                       `is_active_flag`=0, 
 		                       `latitude`=0, `longitude`=0, 
-		                       `last_name`='', `first_name`='', `country`=NULL, `pmr_flag`=0,
+		                       `last_name`='', `first_name`='', `country`=NULL, `accept_mailing`=0, `pmr_flag`=0,
 		                       `new_pw_code`=NULL, `new_pw_date`=NULL,
 		                       `new_email`=NULL, `new_email_code`=NULL, `new_email_date`=NULL,
 		                       `email_problems`=0, `first_email_problem`=NULL, `last_email_problem`=NULL,
@@ -742,6 +760,13 @@ class user
 			// terms and therefore need not to be deleted.
 		sql("DELETE FROM `user_options` WHERE `user_id`='&1'", $this->nUserId);
 		$this->reload();
+
+		sql("DELETE FROM `cache_lists`     WHERE `user_id`='&1'", $this->nUserId);  // Triggers will do all the dependent clean-up.
+		sql("DELETE FROM `cache_adoption`  WHERE `user_id`='&1'", $this->nUserId);
+		sql("DELETE FROM `cache_ignore`    WHERE `user_id`='&1'", $this->nUserId);
+		sql("DELETE FROM `cache_watches`   WHERE `user_id`='&1'", $this->nUserId);
+		sql("DELETE FROM `watches_waiting` WHERE `user_id`='&1'", $this->nUserId);
+		sql("DELETE FROM `notify_waiting`  WHERE `user_id`='&1'", $this->nUserId);
 
 		// lock the user's caches
 		$error = false;

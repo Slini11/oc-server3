@@ -24,7 +24,9 @@
  $date_time_format_message = '&nbsp;' . t('Format:&nbsp;DD-MM-YYYY');
 
  $error_general = "<tr><td class='error' colspan='2'><b>" . t('Some errors occured, please check the marked fields.') . "</b></td></tr>";
- $error_coords_not_ok = '<span class="errormsg">' . t('Your chosen coordinated are invalid') . '</span>';
+ $error_long_not_ok = '<span class="errormsg">' . t('Your chosen coordinated are invalid') . '</span>';
+ $error_lat_not_ok = $error_long_not_ok . "<br />";
+ $error_duplicate_coords = '<span class="errormsg">' . t('Another cache (<a href="viewcache.php?wp=%1">%1</a>) exists at these coords. Maybe you pressed "submit cache" twice. To publish a cache with identical coords, enter other coords first, then edit the listing and change coords.') . '</span>';
  $time_not_ok_message = '<span class="errormsg">' . t('The entered time is invalid.') . '</span>';
  $way_length_not_ok_message = '<span class="errormsg">' . t('The entered distance is invalid, Format: aa.aaa') . '</span>';
  $date_not_ok_message = '<span class="errormsg">' . t('Invalid date, format:DD-MM-JJJJ') . '</span>';
@@ -35,6 +37,7 @@
  $diff_not_ok_message = '&nbsp;<span class="errormsg">' . t('Choose both valuations!') . '</span>';
  $sizemismatch_message = '&nbsp;<span class="errormsg">' . t('For virtual and webcam caches, the cache size has to be -no container-!') . '</span>';
  $safari_not_allowed_message = '<span class="errormsg">' . t('Only virtual caches can be safari caches.') . '</span>';
+ $bad_wpgc_message = '<span class="errormsg">' . t('GC waypoint is invalid, must be GCxxxxx') . '</span>';
 
  $cache_submitted = t('Your cache is successfully added to the database. You will be redirected to the cache page, now.');
 

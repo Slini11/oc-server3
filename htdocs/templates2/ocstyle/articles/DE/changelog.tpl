@@ -14,16 +14,101 @@
 
 	<p>Eine redaktionell aufbereitete Erläuterung neuer OC-Versionen gibt es auch im <em>Altmetall-Blog</em>:</p>
 	<ul>
+		<li><a href="http://blog.dafb-o.de/oc-3-0v13-listen-neue-suchoption-und-mehr/">Version 13</a>: Listen, neue Suchoption und mehr ...</li>
+		<li><a href="http://blog.dafb-o.de/opencaching-3-0-version-11-veroeffentlicht/">Version 11</a>: Automatische Verkleinerung von Bildern, Links zu Logeinträgen ...</li>
+		<li><a href="http://blog.dafb-o.de/opencaching-de-version-10-freigegeben/">Version 10</a>: Nachladen von Logeinträgen, ausführliche Statistik im Benutzerprofil ...</li>
 		<li><a href="http://blog.dafb-o.de/alle-neune-oder-ein-update-fuer-opencachingde/">Version 9</a>: Suchfunktion, OConly-Features, Liste der eigenen Caches + Loghistorie, Schutzgebiete ...</li>
 		<li><a href="http://blog.dafb-o.de/opencaching-3-0-version-8-veroeffentlicht/">Version 8</a>: Statuslogs, Listinglayout, Koordinaten für zusätzliche Wegpunkte, Safari-Caches, Kartenfilteroptionen speichern, automatische Archivierung</li>
 		<li><a href="http://blog.dafb-o.de/okapi-jetzt-auch-fuer-opencaching-de/">Version 7</a>: OKAPI</li>
 		<li><a href="http://blog.dafb-o.de/oc-3-0-6-loggen-mit-uhrzeit/">Version 6</a>: Loggen mit Uhrzeit, Schutz vor Listingvandalismus</li>
 		<li><a href="http://blog.dafb-o.de/opencaching-3-0-5-veroeffentlicht/">Version 5</a>: neue Karte, Vorschaubilder, Bildgalerien, Online-Hilfe ...; vorab: <a href="http://blog.dafb-o.de/neue-icons-auf-der-cachekarte/">neue Kartensymbole</a></li>
-		<li><a href="http://blog.dafb-o.de/page/2/">Version 4</a>: GPX-Wegpunkte und -Bildeinbettung, Nano-Caches, neue Datenlizenz</li>
+		<li><a href="http://blog.dafb-o.de/neues-aus-dem-hause-opencaching-de/">Version 4</a>: GPX-Wegpunkte und -Bildeinbettung, Nano-Caches, neue Datenlizenz</li>
 	</ul>
 	<br />
 
 	<div class="changelog-changes">
+
+	<p id="v3.0.13"><strong>OC 3.0 Version 13</strong> &ndash; 4. Juli 2015</p>
+	<p>Neu:</p>
+	<ul>
+		<li><a href="cachelists.php">Cachelisten</a></li>
+		<li>Filtermöglichkeit für Caches mit Geokrets bei der Suche und auf der Karte</i></li>
+		<li>Link zur Safari-Cache-Liste auf der Karte</li>
+	</ul>
+
+	<p>Geändert / verbessert:</p>
+	<ul>
+		<li>Bilder bis zu 250 KB Größe bleiben unverändert, erst bei &gt; 250 KB wird verkleinert.</li>
+		<li>Um einen noch nicht veröffentlichten Cache zu veröffentlichen genügt es, unten im Listing „sofort veröffentlichen“ zu wählen.
+		<li>Beobachtungs- und Ignorierlisten deaktivierter Benutzer werden gelöscht.</li>
+		<li>kleine Design-Verbesserungen</li>
+		<li>Liste der OC-Länderseiten aktualisiert: Rumänien ist neu, Schweden/Norwegen wurde eingestellt</li>
+		<li>interne Verbesserungen für das Datenpflegeteam</li>
+	</ul>
+
+	<p>Korrigiert (Bugfixes):</p>
+	<ul>
+		<li>zuverlässigeres Ausblenden von GC-Doppellistings bei der Cachesuche und auf der Karte [Bug von Version 9]</li>
+		<li>Kennzeichnung neuer Caches in der Suchergebnisliste korrigiert [Bug von Version 9]</li>
+		<li>Attributanzeige im Internet Explorer korrigiert [Bug von Version 11]</li>
+		<li>Event-Icons in der Logstatistik korrigiert</li>
+		<li>GC- und NC-Wegpunkteingabe korrigiert [Bug von Version 12]</li>
+	</ul>
+	</p>
+
+	<p id="v3.0.12"><strong>OC 3.0 Version 12</strong> &ndash; 31. Mai 2015</p>
+	<p>Neu:</p>
+	<ul>
+		<li>Link „mehr...“ in der Eventliste auf der Startseite, falls mehr als zehn Events oder Events in anderen Ländern vorhanden sind</li>
+		<li>Der Link „andere Koordinatensysteme“ im Listing zeigt auch <i>what3words</i>-Koordinaten an.</i></li>
+		<li>Suche nach <i>what3words</i>-Koordinaten auf der Karte</li>
+		<li>In den <a href="myprofile.php">Profildaten</a> kann man festlegen, dass beim Anschreiben anderer Benutzer standardmäßig die eigene Mailadresse mitgeschickt wird.</li>
+		<li><a href="okapi">OKAPI</a>: experimentelle Unterstützung des neuen Garmin-GGZ-Datenformats</li>
+	</ul>
+
+	<p>Geändert / verbessert:</p>
+	<ul>
+		<li>versehentliche Doppellistings des gleichen Caches werden verhindert</li>
+		<li>Plausibiltitätsprüfung für GC-Wegpunkteingabe im Listing</li>
+		<li>Benachrichtigungsmails über gelöschte Logs enthalten nun auch Logdatum und -typ</li>
+		<li>zuletzt eingegebenes Logdatum wird nur noch 12 Stunden lang für neue Logs vorgeschlagen, danach wieder das aktuelle Datum</li>
+		<li>Persönliche Notiz wird auch bei Eingabe einer ungültigen Koordinate gespeichert</li>
+		<li>Informationen zum Opencaching Deutschland e.V. aktualisiert</li>
+	</ul>
+
+	<p>Korrigiert (Bugfixes):</p>
+	<ul>
+		<li>Der An-GPS-Gerät-Senden-Knopf im Listing funktioniert wieder.</li>
+		<li>Deaktivierte Events werden wie deaktivierte Caches nach einem Jahr automatisch archiviert. [Bug von Version 9]</li>
+		<li>fehlende eigene Mailadresse beim Anschrieb anderer Benutzer ergänzt</li>
+		<li>Fehler bei der Sprachumschaltung auf www.opencaching.it und www.opencachingspain.es behoben [Problem seit Version 10]</li>
+		<li>kleinere Korrekturen an der OKAPI (&rarr; <a href="https://code.google.com/p/opencaching-api/source/list">Changelog</a>)</li>
+	</ul>
+	</p>
+
+	<p id="v3.0.11"><strong>OC 3.0 Version 11</strong> &ndash; 21. Juni 2014</p>
+	<p>Neu:</p>
+	<ul>
+		<li>direkter Link auf ein bestimmtes Log per Rechtsklick auf das zugeh&ouml;rige Symbol und „Link kopieren“</li>
+		<li>Bilder beim Upload automatisch verkleinern</li>
+		<li>R&uuml;ckfrage bevor ein Bild gel&ouml;scht wird</li>
+		<li>Link „Umkreissuche auf geocaching.com“ im Adminbereich f&uuml;r gemeldete Caches</li>
+		<li>Benutzeroption um den OC Newsletter zu erhalten (oder nicht)</li>
+	</ul>
+
+	<p>Geändert / verbessert:</p>
+	<ul>
+		<li>Buttondesign im IE verbessert</li>
+		<li>Link zum Listing auf der Listingseite mit http:// versehen, um es als Link auf Webseiten nutzbar zu machen</li>
+	</ul>
+
+	<p>Korrigiert (Bugfixes):</p>
+	<ul>
+		<li>Positionierung des Hilfe-Buttons im IE verbessert</li>
+		<li>Erstellung des direkten Links zu einem Logeintrag nach dem Laden aller Logs korrigiert [Bug von Version 10]</li>
+		<li>einige Tippfehler in der deutschen &Uuml;bersetzung und der Teamliste korrigiert</li>
+	</ul>
+	<br />
 
 	<p id="v3.0.10"><strong>OC 3.0 Version 10</strong> &ndash; 24. August 2013</p>
 	<p>Neu:</p>

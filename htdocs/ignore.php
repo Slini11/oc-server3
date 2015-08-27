@@ -3,14 +3,13 @@
  *  For license information see doc/license.txt
  *
  *  Unicode Reminder メモ
- *
- *  Display some status information about the server and Opencaching
  ***************************************************************************/
 
 	require('./lib2/web.inc.php');
 
 	$cache_id = isset($_GET['cacheid']) ? $_GET['cacheid']+0 : 0;
 	$action = isset($_GET['action']) ? $_GET['action'] : '';
+	$target = isset($_GET['target']) ? $_GET['target'] : 'viewcache.php?cacheid=' . $cache_id;
 
 	$login->verify();
 
@@ -46,5 +45,5 @@
 		sql("DELETE FROM `map2_data` WHERE `result_id`='&1'", $map_result_id);
 	}
 
-	$tpl->redirect('viewcache.php?cacheid=' . ($cache_id+0));
+	$tpl->redirect($target);
 ?>

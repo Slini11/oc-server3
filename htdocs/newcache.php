@@ -19,7 +19,7 @@
 
   //prepare the templates and include all neccessary
 	require_once('./lib/common.inc.php');
-  require_once($opt['rootpath'] . '../lib/htmlpurifier-4.2.0/library/HTMLPurifier.auto.php');
+	require_once('./lib2/OcHTMLPurifier.class.php');
 
 	$no_tpl_build = false;
 
@@ -36,6 +36,7 @@
 			tpl_set_var('message_start', "");
 			tpl_set_var('message_end', "");
 			tpl_set_var('message', $login_required);
+			tpl_set_var('helplink', helppagelink('login'));
 		}
 		else
 		{
@@ -52,12 +53,13 @@
 			tpl_set_var('hidden_since_message', '');
 			tpl_set_var('activate_on_message', '');
 			tpl_set_var('lon_message', '');
-			tpl_set_var('lat_message', '');
+			tpl_set_var('lat_message', '&nbsp;&nbsp;');
 			tpl_set_var('tos_message', '');
 			tpl_set_var('name_message', '');
 			tpl_set_var('desc_message', '');
 			tpl_set_var('effort_message', '');
 			tpl_set_var('size_message', '');
+			tpl_set_var('wpgc_message', '');
 			tpl_set_var('type_message', '');
 			tpl_set_var('diff_message', '');
 			tpl_set_var('safari_message', '');
@@ -136,7 +138,7 @@
 			else
 			{
 				if (sqlValue("SELECT `no_htmledit_flag` FROM `user` WHERE `user_id`='" .  sql_escape($usr['userid']) . "'", 1) == 1)
-					$descMode = 1;
+					$descMode = 2;
 				else
 					$descMode = 3;
 			}
@@ -153,23 +155,18 @@
 					$name = iconv("ISO-8859-1", "UTF-8", $name);
 			}
 
-			// Text / normal HTML / HTML editor
-			tpl_set_var('use_tinymce', (($descMode == 3) ? 1 : 0));
+			// normal HTML / HTML editor
+			tpl_set_var('descMode', $descMode);
+			$headers = tpl_get_var('htmlheaders') . "\n";
 
-			if ($descMode == 1)
-				tpl_set_var('descMode', 1);
-			else if ($descMode == 2)
-				tpl_set_var('descMode', 2);
-			else
+			if ($descMode == 3)
 			{
 				// TinyMCE
-				$headers = tpl_get_var('htmlheaders') . "\n";
 				$headers .= '<script language="javascript" type="text/javascript" src="resource2/tinymce/tiny_mce_gzip.js"></script>' . "\n";
         $headers .= '<script language="javascript" type="text/javascript" src="resource2/tinymce/config/desc.js.php?cacheid=0&lang='.strtolower($locale).'"></script>' . "\n";
-				tpl_set_var('htmlheaders', $headers);
-
-				tpl_set_var('descMode', 3);
 			}
+			$headers .= '<script language="javascript" type="text/javascript" src="templates2/ocstyle/js/editor.js"></script>' . "\n";
+			tpl_set_var('htmlheaders', $headers);
 
 			//effort
 			$search_time = isset($_POST['search_time']) ? $_POST['search_time'] : '0';
@@ -274,10 +271,10 @@
 
 			// gc- and nc-waypoints
 			// fix #4356: gc waypoints are frequently copy&pasted with leading spaces
-			$wp_gc = isset($_POST['wp_gc']) ? trim($_POST['wp_gc']) : '';  // Ocprop
+			$wp_gc = isset($_POST['wp_gc']) ? strtoupper(trim($_POST['wp_gc'])) : '';  // Ocprop
 			tpl_set_var('wp_gc', htmlspecialchars($wp_gc, ENT_COMPAT, 'UTF-8'));
 
-			$wp_nc = isset($_POST['wp_nc']) ? trim($_POST['wp_nc']) : '';
+			$wp_nc = isset($_POST['wp_nc']) ? strtoupper(trim($_POST['wp_nc'])) : '';
 			tpl_set_var('wp_nc', htmlspecialchars($wp_nc, ENT_COMPAT, 'UTF-8'));
 
 			//difficulty
@@ -530,7 +527,7 @@
 				{
 					if (!mb_ereg_match('^[0-9]{1,2}$', $lat_h))
 					{
-						tpl_set_var('lat_message', $error_coords_not_ok);
+						tpl_set_var('lat_message', $error_lat_not_ok);
 						$error = true;
 						$lat_h_not_ok = true;
 					}
@@ -542,7 +539,7 @@
 						}
 						else
 						{
-							tpl_set_var('lat_message', $error_coords_not_ok);
+							tpl_set_var('lat_message', $error_lat_not_ok);
 							$error = true;
 							$lat_h_not_ok = true;
 						}
@@ -556,14 +553,14 @@
 						}
 						else
 						{
-							tpl_set_var('lat_message', $error_coords_not_ok);
+							tpl_set_var('lat_message', $error_lat_not_ok);
 							$error = true;
 							$lat_min_not_ok = true;
 						}
 					}
 					else
 					{
-						tpl_set_var('lat_message', $error_coords_not_ok);
+						tpl_set_var('lat_message', $error_lat_not_ok);
 						$error = true;
 						$lat_min_not_ok = true;
 					}
@@ -573,23 +570,23 @@
 
 					if ($latitude == 0)
 					{
-						tpl_set_var('lon_message', $error_coords_not_ok);
+						tpl_set_var('lat_message', $error_lat_not_ok);
 						$error = true;
 						$lat_min_not_ok = true;
 					}
 				}
 				else
 				{
-					$latitude = NULL;
-					$lat_h_not_ok = false;
-					$lat_min_not_ok = false;
+					tpl_set_var('lat_message', $error_lat_not_ok);
+					$lat_h_not_ok = true;
+					$lat_min_not_ok = true;
 				}
 
 				if ($lon_h!='' || $lon_min!='')
 				{
 					if (!mb_ereg_match('^[0-9]{1,3}$', $lon_h))
 					{
-						tpl_set_var('lon_message', $error_coords_not_ok);
+						tpl_set_var('lon_message', $error_long_not_ok);
 						$error = true;
 						$lon_h_not_ok = true;
 					}
@@ -601,7 +598,7 @@
 						}
 						else
 						{
-							tpl_set_var('lon_message', $error_coords_not_ok);
+							tpl_set_var('lon_message', $error_long_not_ok);
 							$error = true;
 							$lon_h_not_ok = true;
 						}
@@ -615,14 +612,14 @@
 						}
 						else
 						{
-							tpl_set_var('lon_message', $error_coords_not_ok);
+							tpl_set_var('lon_message', $error_long_not_ok);
 							$error = true;
 							$lon_min_not_ok = true;
 						}
 					}
 					else
 					{
-						tpl_set_var('lon_message', $error_coords_not_ok);
+						tpl_set_var('lon_message', $error_long_not_ok);
 						$error = true;
 						$lon_min_not_ok = true;
 					}
@@ -632,20 +629,35 @@
 
 					if ($longitude == 0)
 					{
-						tpl_set_var('lon_message', $error_coords_not_ok);
+						tpl_set_var('lon_message', $error_long_not_ok);
 						$error = true;
 						$lon_min_not_ok = true;
 					}
 				}
 				else
 				{
-					$longitude = NULL;
-					$lon_h_not_ok = false;
-					$lon_min_not_ok = false;
+					tpl_set_var('lon_message', $error_long_not_ok);
+					$lon_h_not_ok = true;
+					$lon_min_not_ok = true;
 				}
 
 				$lon_not_ok = $lon_min_not_ok || $lon_h_not_ok;
 				$lat_not_ok = $lat_min_not_ok || $lat_h_not_ok;
+
+				// check for duplicate coords
+				if (!($lon_not_ok || $lat_not_ok))
+				{
+					$duplicate_wpoc =
+					  sqlValue("SELECT MIN(wp_oc) FROM `caches`
+						                           WHERE `status`=1
+						                             AND ROUND(`longitude`,6)=ROUND('" . sql_escape($longitude) . "',6)
+						                             AND ROUND(`latitude`,6)=ROUND('" . sql_escape($latitude) . "',6)", null);
+					if ($duplicate_wpoc)
+					{
+						tpl_set_var('lon_message', mb_ereg_replace('%1', $duplicate_wpoc, $error_duplicate_coords));
+						$lon_not_ok = true;
+					}
+				}
 
 				//check effort
 				$time_not_ok = true;
@@ -679,6 +691,14 @@
 				if ($hidden_date_not_ok)
 				{
 					tpl_set_var('hidden_since_message', $date_not_ok_message);
+					$error = true;
+				}
+
+				//check GC waypoint
+				$wpgc_not_ok = $wp_gc != "" && !preg_match("/^(?:GC|CX)[0-9A-Z]{3,6}$/", $wp_gc);
+				if ($wpgc_not_ok)
+				{
+					tpl_set_var('wpgc_message', $bad_wpgc_message);
 					$error = true;
 				}
 
@@ -725,15 +745,10 @@
 					$tos_not_ok = false;
 				}
 
-				//html-desc?
-				if ($descMode != 1)
-				{
-          // Filter Input
-          $purifier = new HTMLPurifier();
-          $desc = $purifier->purify($desc);
-
-					tpl_set_var('desc', htmlspecialchars($desc, ENT_COMPAT, 'UTF-8'));
-				}
+        // Filter Input
+        $purifier = new OcHTMLPurifier($opt);
+        $desc = $purifier->purify($desc);
+				tpl_set_var('desc', htmlspecialchars($desc, ENT_COMPAT, 'UTF-8'));
 
 				//cache-size
 				$size_not_ok = false;
@@ -781,7 +796,7 @@
 					tpl_set_var('safari_message', '');
 
 				//no errors?
-				if (!($tos_not_ok || $name_not_ok || $hidden_date_not_ok || $activation_date_not_ok || $lon_not_ok || $lat_not_ok || $time_not_ok || $way_length_not_ok || $size_not_ok || $type_not_ok || $diff_not_ok || $attribs_not_ok))
+				if (!($tos_not_ok || $name_not_ok || $hidden_date_not_ok || $activation_date_not_ok || $lon_not_ok || $lat_not_ok || $time_not_ok || $way_length_not_ok || $size_not_ok || $type_not_ok || $diff_not_ok || $attribs_not_ok || $wpgc_not_ok))
 				{
 					//sel_status
 					$now = getdate();
@@ -885,27 +900,6 @@
 												nl2br(htmlspecialchars($hints, ENT_COMPAT, 'UTF-8')),
 												$short_desc,
 												(($descMode == 3) ? 1 : 0),
-												$oc_nodeid);
-					}
-					else
-					{
-						sql("INSERT INTO `cache_desc` (
-													`id`,
-													`cache_id`,
-													`language`,
-													`desc`,
-													`desc_html`,
-													`hint`,
-													`short_desc`,
-													`last_modified`,
-													`desc_htmledit`,
-													`node`
-												) VALUES ('', '&1', '&2', '&3', '0', '&4', '&5', NOW(), 0, '&6')",
-												$cache_id,
-												$sel_lang,
-												nl2br(htmlspecialchars($desc, ENT_COMPAT, 'UTF-8')),
-												nl2br(htmlspecialchars($hints, ENT_COMPAT, 'UTF-8')),
-												$short_desc,
 												$oc_nodeid);
 					}
 

@@ -5,7 +5,7 @@
 ***************************************************************************}
 
 	<div class="content2-pagetitle">
-		<img src="resource2/{$opt.template.style}/images/misc/32x32-tools.png" style="align: left; margin-right: 10px;" width="32" height="32" alt="" />Neuen Cache eintragen - Beschreibung
+		<img src="resource2/{$opt.template.style}/images/misc/32x32-tools.png" style="margin-right: 10px;" width="32" height="32" alt="" />Neuen Cache eintragen - Beschreibung
 	</div>
 
 	<div id="cachedescinfo" class="content-txtbox-noshade" style="padding-right: 25px;">
@@ -141,6 +141,8 @@
 		erl&auml;utere den Aufwand in der Cachebeschreibung. Wenn du bei der 
 		Sch&auml;tzung davon ausgehst, dass eine Teilstrecke mit Inline-Skates, dem Fahrrad oder dem Auto zur&uuml;ckgelegt wird, weise ebenfalls in der Beschreibung darauf hin.</p>
 
+		<p><b>Wegpunkte:</b> Falls du den Cache auch auf anderen Geocaching-Plattformen veröffentlicht hast, kannst du hier die entsprechenden Wegpunkte angeben. geocaching.com-Wegpunkte haben das Format GCXXXXX, wobei XXXXX für bis zu fünf Großbuchstaben und/oder Ziffern steht. Navicache-Wegpunkte haben das Format NXXXX.</p>
+
 		<p>
 			<b>Cacheattribute:</b> Mit den Cacheattributen kannst du genauere Angaben zu deinem Cache machen, die z.B. bei der <a href="search.php">Suche</a> als Kriterium angegeben werden k&ouml;nnen.
 			Viele Attribute sind dabei Erfahrungswerte (z.B. Zeckengefahr). Als Finder eines Geocaches kannst du gerne den Owner darauf hinweisen, dass er dem Geocache die entsprechenden Attribute zuordnen kann.
@@ -165,6 +167,8 @@
 		<p><a name="logpw"></a><b>Kennwort zum Loggen:</b> Jeder der einen &bdquo;gefunden&ldquo;-Logeintrag machen m&ouml;chte, muss dieses Kennwort eingeben. Sollte ein
 		Finder ein falsches Kennwort eingeben, kann er seinen Fund nicht online loggen. Falls kein Kennwort gew&uuml;nscht wird, muss dieses Feld leer gelassen werden.
 		Die Gro&szlig;- und Kleinschreibung wird nicht ber&uuml;cksichtigt. Vorsicht ist bei Kennw&ouml;rtern geboten, die 0, O, i oder j enthalten, da diese Buchtaben leicht zu verwechseln sind.</p>
+
+		<p><b>Alle Cachelisten anzeigen:</b> Diese Option ist für neue Caches zunächst eingeschaltet und kann nachträglich geändert werden. Wenn sie aktiv ist, erscheinen oberhalb des Beschreibungstextes &ndash; rechts neben den Attributen &ndash; alle <a href="cachelists.php">öffentlichen Cachelisten</a>, in denen dieser Cache enthalten ist, und die auf &bdquo;für Alle in Cachelistings sichtbar&ldquo; eingestellt sind. Ansonsten werden nur Listen des Cachebesitzers und des jeweiligen Benutzers, der sich den Cache anschaut, angezeigt.</p>
 
 		<p><b>Nutzungsbedinungen:</b> Lies dir bitte die Nutzungsbedinungen genau durch! Wir haben versucht, diese m&ouml;glichst kurz und fair zu halten.</p>
 

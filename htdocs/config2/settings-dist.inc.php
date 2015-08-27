@@ -190,6 +190,7 @@
 	 */
 	$opt['template']['default']['locale'] = 'DE';      // may be overwritten by $opt['domain'][...]['locale']
 	$opt['template']['default']['article_locale'] = 'EN';    // may be overwritten by $opt['domain'][...]['article_locale']
+	$opt['template']['default']['fallback_locale'] = 'EN';   // may be overwritten by $opt['domain'][...]['article_locale']
 	$opt['template']['default']['style'] = 'ocstyle';  // may be overwritten by $opt['domain'][...]['style']
 	$opt['template']['default']['country'] = 'DE';     // may be overwritten by $opt['domain'][...]['country']
 
@@ -308,6 +309,7 @@
 	 * 12 Opencaching Russland  (?)
 	 * 13 Garmin (www.opencaching.com)
 	 * 14 Opencaching Niederlande (www.opencaching.nl)
+	 * 16 Opencaching Rumänien (www.opencaching.ro)
 	 */
 	$opt['logic']['node']['id'] = 4;
 
@@ -315,8 +317,12 @@
 	 */
 	$opt['logic']['pictures']['dir'] = $opt['rootpath'] . 'images/uploads';  // Ocprop
 	$opt['logic']['pictures']['url'] = 'http://devel.opencaching.de/images/uploads';
-	$opt['logic']['pictures']['maxsize'] = 256000;
-	$opt['logic']['pictures']['extensions'] = 'jpg;jpeg;gif;png;bmp';
+	$opt['logic']['pictures']['maxsize'] = 6000*1024;
+	$opt['logic']['pictures']['unchg_size'] = 250*1024;
+    if (extension_loaded('imagick'))
+    $opt['logic']['pictures']['extensions'] = 'jpg;jpeg;gif;png;bmp;tif;psd;pcx;svg;xpm';
+    else
+    $opt['logic']['pictures']['extensions'] = 'jpg;jpeg;gif;png';
 
 	/* Thumbnail sizes
 	 */
@@ -459,6 +465,10 @@
 	$opt['logic']['admin']['enable_listing_admins'] = false;
 	$opt['logic']['admin']['listingadmin_notification'] = '';  // Email address(es), comma separated
 
+	/* optional APIs
+	 */
+	$opt['logic']['api']['email_problems']['key'] = '';   // must be set to enable
+
   /* Database charset
 	 *   frontend and php charsets are UTF-8
 	 *   here you can set a different charset for the MySQL-Engine
@@ -509,6 +519,7 @@
 	 */
 
 	$opt['cron']['geokrety']['run'] = true;
+	$opt['cron']['geokrety']['xml_archive'] = false;
 	$opt['cron']['autoarchive']['run'] = false;
 	$opt['cron']['gcwp']['sources'] = array();
 
@@ -578,6 +589,9 @@
  	// (e.g. domain called without www. prefix) - must match domain of $opt['lib']['garmin']['url']
  	$opt['lib']['garmin']['redirect'] = 'http://www.site.org/garmin.php?redirect=1&cacheid={cacheid}';
 
+    // developer.what3words.com API key
+    $opt['lib']['w3w']['apikey'] = 'YOURAPIKEY';
+
 	// Google Maps API key
 	// http://code.google.com/intl/de/apis/maps/signup.html
 	$opt['lib']['google']['mapkey'] = array();
@@ -615,6 +629,11 @@
 	 */
 	$opt['html_purifier']['cache_path'] = dirname(__FILE__).'/../cache2/html_purifier/';
 
+	/*
+	 * OKAPI
+	 */
+	$opt['okapi']['var_dir'] = $opt['rootpath'] . 'var/okapi';
+
 	/* Opencaching Node Daemon
 	 *
 	 */
@@ -647,12 +666,4 @@
   $opt['httpd']['user'] = 'apache';
   $opt['httpd']['group'] = 'apache';
 
-	/* CMS links for external pages
-	 */
-
-	// explanation of common login errors
-	$opt['cms']['login'] = 'http://wiki.opencaching.de/index.php/Login_auf_Opencaching.de';
-
-	// explanation of nature protection areas
-	$opt['cms']['npa'] = 'http://wiki.opencaching.de/index.php/Schutzgebiete';
 ?>

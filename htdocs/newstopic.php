@@ -3,12 +3,10 @@
  *  For license information see doc/license.txt
  *
  *  Unicode Reminder メモ
- *
- *  Display some status information about the server and Opencaching
  ***************************************************************************/
 
 	require('./lib2/web.inc.php');
-  require_once($opt['rootpath'] . '../lib/htmlpurifier-4.2.0/library/HTMLPurifier.auto.php');
+	require_once('./lib2/OcHTMLPurifier.class.php');
 
 	$tpl->name = 'newstopic';
 	$tpl->menuitem = MNU_START_NEWS_POST;
@@ -42,7 +40,7 @@
 				$newstext = htmlspecialchars($newstext, ENT_COMPAT, 'UTF-8');
 			else
 			{
-				$purifier = new HTMLPurifier();
+				$purifier = new OcHTMLPurifier($opt);
 				$newstext = $purifier->purify($newstext);
 			}
 

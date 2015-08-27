@@ -110,6 +110,9 @@
 	$opt['lib']['garmin']['url'] = 'http://local.opencaching.de/';
 	$opt['lib']['garmin']['redirect'] = $opt['lib']['garmin']['url'] . 'garmin.php?redirect=1&cacheid={cacheid}';
 
+    // developer.what3words.com API Key
+    $opt['lib']['w3w']['apikey'] = 'YOURAPIKEY';
+
 	// other settings
 	$opt['page']['showdonations'] = true;
 	$opt['page']['showsocialmedia'] = true;
@@ -120,10 +123,11 @@
 	$opt['logic']['admin']['listingadmin_notification'] = 'root';
 	
 	$opt['template']['locales']['DA']['show'] = false;
-	$opt['template']['locales']['FR']['show'] = false;
 	$opt['template']['locales']['JA']['show'] = false;
 	$opt['template']['locales']['NL']['show'] = false;
 	$opt['template']['locales']['PL']['show'] = false;
 	$opt['template']['locales']['PT']['show'] = false;
 	$opt['template']['locales']['RU']['show'] = false;
+	$opt['template']['locales']['SV']['show'] = false;
+	$opt['template']['locales']['NO']['show'] = false;
 ?>

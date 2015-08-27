@@ -5,7 +5,7 @@
  ***************************************************************************}
 {* OCSTYLE *}
 <div class="content2-pagetitle">
-	<img src="resource2/{$opt.template.style}/images/profile/32x32-profile.png" style="align: left; margin-right: 10px;" width="32" height="32" alt="" />
+	<img src="resource2/{$opt.template.style}/images/profile/32x32-profile.png" style="margin-right: 10px;" width="32" height="32" alt="" />
 	{t}My profile details{/t}
 </div>
 
@@ -34,7 +34,7 @@
 
 	{foreach from=$useroptions item=useropt}
 		<tr>
-			<td style="vertical-align:top; width:10px"><nobr>{$useropt.name|escape}:</nobr></td>
+			<td style="vertical-align:top; width:10px"><nobr>{$useropt.name|escape}{t}#colonspace#{/t}:</nobr></td>
 			<td>
 				{if $edit==true}
 					{if $useropt.option_input=="text"}
@@ -88,7 +88,7 @@
 		<td class="header-small" colspan="3">
 			{if $edit==true}
 				<input type="submit" name="cancel" value="{t}Cancel{/t}" class="formbutton" onclick="submitbutton('cancel')" />&nbsp;&nbsp;
-				<input type="submit" name="save" value="{t}Submit{/t}" class="formbutton" onclick="submitbutton('save')"(/>
+				<input type="submit" name="save" value="{t}Submit{/t}" class="formbutton" onclick="submitbutton('save')" />
 			{else}
 				<input type="submit" name="change" value="{t}Change{/t}" class="formbutton" onclick="flashbutton('change')" />
 			{/if}

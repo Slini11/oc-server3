@@ -56,19 +56,19 @@
 		<title><?php echo $tpl_subtitle; ?>{title}</title>
 		<meta name="keywords" content="Geocaching, Geocache, Cache, Geocashing, Schnitzeljagd, Schatzsuche, GPS, Openstreetmap, kostenlos, GPX, GPX download, Koordinaten, Hobby, Natur" />
 		<meta name="description" content="Opencaching.de ist das freie Portal für Geocaching, ein GPS-Schatzsuche-Spiel: Es werden kleine Behälter versteckt, die anhand von GPS-Koordinaten zu finden sind." />
-		<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 		<meta http-equiv="Content-Style-Type" content="text/css" />
 		<meta http-equiv="Content-Language" content="{lang}" />
 		<meta http-equiv="gallerimg" content="no" />
 		<meta http-equiv="cache-control" content="no-cache" />
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 		<link rel="SHORTCUT ICON" href="favicon.ico" />
 		<link rel="apple-touch-icon" href="resource2/{style}/images/oclogo/apple-touch-icon-iphone.png" />
 		<link rel="apple-touch-icon" sizes="72x72" href="resource2/{style}/images/oclogo/apple-touch-icon-ipad.png" />
 		<link rel="apple-touch-icon" sizes="114x114" href="resource2/{style}/images/oclogo/apple-touch-icon-iphone-retina.png" />
 		<link rel="apple-touch-icon" sizes="144x144" href="resource2/{style}/images/oclogo/apple-touch-icon-ipad-retina.png" />
 		<link rel="stylesheet" type="text/css" media="screen,projection" href="resource2/{style}/css/style_screen.css?ft={screen_css_time}" />
-		<!--[if IE]>
+		<!--[if lt IE 9]>
 			<link rel="stylesheet" type="text/css" media="screen,projection" href="resource2/{style}/css/style_screen_msie.css?ft={screen_msie_css_time}" />
 		<![endif]-->
       <script type="text/javascript">
@@ -240,11 +240,10 @@
 						<a href="http://www.opencaching.de" target="_blank"><img src="resource2/ocstyle/images/nodes/oc-de.png" width="100" height="22" /></a><br />
 						<a href="http://www.opencachingspain.es" target="_blank"><img src="resource2/ocstyle/images/nodes/oc-es.png" width="100" height="22" /></a><br />
 						<a href="http://www.opencaching.it" target="_blank"><img src="resource2/ocstyle/images/nodes/oc-it.png" width="100" height="22" /></a><br />
-						<a href="http://www.opencaching.no" target="_blank"><img src="resource2/ocstyle/images/nodes/oc-no.png" width="100" height="22" /></a><br />
 						<a href="http://www.opencaching.nl" target="_blank"><img src="resource2/ocstyle/images/nodes/oc-nl.png" width="100" height="22" /></a><br />
 						<a href="http://www.opencaching.pl" target="_blank"><img src="resource2/ocstyle/images/nodes/oc-pl.png" width="100" height="22" /></a><br />
-						<a href="http://www.opencaching.se" target="_blank"><img src="resource2/ocstyle/images/nodes/oc-se.png" width="100" height="22" /></a><br />
 						<a href="http://www.opencaching.org.uk" target="_blank"><img src="resource2/ocstyle/images/nodes/oc-org-uk.png" width="100" height="22" /></a><br />
+						<a href="http://www.opencaching.ro" target="_blank"><img src="resource2/ocstyle/images/nodes/oc-ro.png" width="100" height="22" /></a><br />
 						<a href="http://www.opencaching.us" target="_blank"><img src="resource2/ocstyle/images/nodes/oc-us.png" width="100" height="22" /></a>
 					</div>
 
@@ -300,8 +299,8 @@
 					<div class="sidebar-txtbox-noshade">
 						<p class="content-txtbox-noshade-size5">
 							<small>
-								{t}Page performance{/t}: {scripttime} {t}sec{/t}<br />
-								{t}Page creation{/t}: <?php $bTemplateBuild->Stop(); echo sprintf('%1.3f', $bTemplateBuild->Diff()); ?> {t}sec{/t}
+								{t}Page performance:{/t} {scripttime} {t}sec{/t}<br />
+								{t}Page creation:{/t} <?php $bTemplateBuild->Stop(); echo sprintf('%1.3f', $bTemplateBuild->Diff()); ?> {t}sec{/t}
 							</small>
 						</p>
 					</div>
@@ -312,6 +311,7 @@
 				<div class="content2">
 					<div class="tplhelp">
 						<?php mnu_EchoHelpLink($tplname); ?>
+			        <!--[if IE]><div></div><![endif]-->
 					</div>
 			
 					<div id="ocmain">

@@ -3,8 +3,6 @@
  *  For license information see doc/license.txt
  *
  *  Unicode Reminder メモ
- *
- *  Display some status information about the server and Opencaching
  ***************************************************************************/
 
 	$disable_verifyemail = true;
@@ -66,8 +64,12 @@
 			$tpl->redirect('login.php?action=cookieverify&target=' . urlencode($target));
 
 		$tpl->assign('username', $username);
-		$tpl->assign('error', $retval);
+		if  (isset($_POST['password']))
+			$tpl->assign('error', $retval);
+		else
+			$tpl->assign('error', LOGIN_OK);
 	}
+	$tpl->assign('loginhelplink', helppagelink('login'));
 	$tpl->assign('target', $target);
 
 	$tpl->display();

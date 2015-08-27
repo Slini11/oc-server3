@@ -251,6 +251,17 @@
 	       SET nModified = nModified + ROW_COUNT();
 	     END;");
 
+	sql_dropProcedure('sp_updateall_cachelist_counts');
+	sql("CREATE PROCEDURE sp_updateall_cachelist_counts (OUT nModified INT)
+	     BEGIN
+				UPDATE `stat_cache_lists` SET `entries`=
+					(SELECT COUNT(*) from `cache_list_items` WHERE `cache_list_items`.`cache_list_id`=`stat_cache_lists`.`cache_list_id`); 
+				SET nModified = ROW_COUNT();
+				UPDATE `stat_cache_lists` SET `watchers`=
+					(SELECT COUNT(*) from `cache_list_watches` WHERE `cache_list_watches`.`cache_list_id`=`stat_cache_lists`.`cache_list_id`); 
+				SET nModified = nModified + ROW_COUNT();
+	     END;");
+
 	/* update log modification date when rating changed, so that it is resent via
 	   XML interface; see issue #244 */
 	sql_dropProcedure('sp_update_cachelog_rating');
@@ -404,29 +415,79 @@
 	       CALL sp_refreshall_statpic();
 	     END;");
 
-	// increment/decrement stat_caches.watch
+	// re-calculate stat_caches.watch for one cache
 	sql_dropProcedure('sp_update_watchstat');
-	sql("CREATE PROCEDURE sp_update_watchstat (IN nCacheId INT, IN bRemoved BOOLEAN)
+	sql("CREATE PROCEDURE sp_update_watchstat (IN nCacheId INT)
 	     BEGIN
-			   DECLARE nWatch INT DEFAULT 1;
-			   IF bRemoved = TRUE THEN SET nWatch = -1; END IF;
-			   UPDATE `stat_caches` SET `stat_caches`.`watch`=IF(`stat_caches`.`watch`+nWatch>0, `stat_caches`.`watch`+nWatch, 0) WHERE `stat_caches`.`cache_id`=nCacheId;
+			   DECLARE nWatches INT DEFAULT 0;
+				 SET nWatches =
+					(SELECT COUNT(*) FROM
+						(SELECT `cache_list_watches`.`user_id` 
+						 FROM `cache_list_watches`, `cache_lists`, `cache_list_items`
+						 WHERE `cache_list_items`.`cache_id`=nCacheId AND `cache_lists`.`id`=`cache_list_items`.`cache_list_id` AND `cache_list_watches`.`cache_list_id`=`cache_lists`.`id`
+						 UNION   /* UNION discards duplicates */
+						 SELECT `user_id` FROM `cache_watches` WHERE `cache_id`=nCacheId) AS `wu`); 
+			   UPDATE `stat_caches` SET `stat_caches`.`watch` = nWatches WHERE `cache_id`=nCacheId;
 			   IF ROW_COUNT() = 0 THEN
-			     INSERT IGNORE INTO `stat_caches` (`cache_id`, `watch`) VALUES (nCacheId, IF(nWatch>0, nWatch, 0));
+			     INSERT IGNORE INTO `stat_caches` (`cache_id`, `watch`) VALUES (nCacheId, nWatches);
 			   END IF;
 	     END;");
 
-	// recalc watch of stat_caches for all entries
+	// re-calculate stat_caches.watch for all entries of a cache list
+	sql_dropProcedure('sp_update_list_watchstat');
+	sql("CREATE PROCEDURE sp_update_list_watchstat (IN nCachelistId INT)
+	     BEGIN
+					DECLARE done INT DEFAULT 0;
+					DECLARE cacheid INT DEFAULT 0;
+					DECLARE cur1 CURSOR FOR SELECT `cache_id` FROM `cache_list_items` WHERE `cache_list_id` = nCachelistId;
+					DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+					OPEN cur1;
+					REPEAT
+						FETCH cur1 INTO cacheid;
+						IF NOT done THEN
+							CALL sp_update_watchstat(cacheid); 
+						END IF;
+					UNTIL done END REPEAT;
+					CLOSE cur1;
+	     END;");
+
+	// re-calculate stat_caches.watch for all entries
 	sql_dropProcedure('sp_updateall_watchstat');
 	sql("CREATE PROCEDURE sp_updateall_watchstat (OUT nModified INT)
 	     BEGIN
 	       SET nModified=0;
 
-	       INSERT IGNORE INTO `stat_caches` (`cache_id`) SELECT `cache_id` FROM `cache_watches` GROUP BY `cache_id`;
+	       INSERT IGNORE INTO `stat_caches` (`cache_id`) 
+				 	 SELECT DISTINCT `cache_id` FROM `cache_watches` 
+					 UNION 
+					 SELECT DISTINCT `cache_id` FROM `cache_list_items` 
+					 WHERE `cache_list_items`.`cache_list_id` IN
+					   (SELECT `cache_list_id` FROM `cache_list_watches`); 
 
-	       /* stat_caches.watch */
-	       UPDATE `stat_caches`, (SELECT `cache_id`, COUNT(*) AS `count` FROM `cache_watches` GROUP BY `cache_id`) AS `tblWatches` SET `stat_caches`.`watch`=`tblWatches`.`count` WHERE `stat_caches`.`cache_id`=`tblWatches`.`cache_id`;
+				 /* initialize temp watch stats with 0 */
+				 DROP TEMPORARY TABLE IF EXISTS `tmp_watchstat`;
+				 CREATE TEMPORARY TABLE `tmp_watchstat` ENGINE=MEMORY (SELECT `cache_id`, 0 AS `watch` FROM `stat_caches`);
+				 ALTER TABLE `tmp_watchstat` ADD PRIMARY KEY (`cache_id`); 
+
+	       /* calculate temp stats for all watches caches (no effect for unwatched) */
+				 UPDATE `tmp_watchstat`, 
+								(SELECT `cache_id`, COUNT(*) AS `count` FROM 
+									(SELECT `cache_id`, `user_id` FROM `cache_watches` 
+									 UNION
+									 SELECT `cache_id`, `user_id` FROM `cache_list_items`, `cache_list_watches`
+									 WHERE `cache_list_items`.`cache_list_id` = `cache_list_watches`.`cache_list_id`
+									) `ws` 
+								 GROUP BY `cache_id`) `users_watching_caches`
+				 SET `tmp_watchstat`.`watch` = `users_watching_caches`.`count` 
+				 WHERE `tmp_watchstat`.`cache_id` = `users_watching_caches`.`cache_id`;
+
+				 /* transfer temp data to stat_caches */
+				 UPDATE `stat_caches`, (SELECT * FROM `tmp_watchstat`) AS `ws`
+				 SET `stat_caches`.`watch` = `ws`.`watch`
+				 WHERE `stat_caches`.`cache_id` = `ws`.`cache_id`;
 	       SET nModified=nModified+ROW_COUNT();
+
+				 DROP TEMPORARY TABLE `tmp_watchstat`;
 	     END;");
 
 	// increment/decrement stat_caches.ignore
@@ -613,7 +674,7 @@
 
 								/* waypoint reservation was not successfull. Maybe we are on a development machine, where cronjob for waypoint pool
 								 * generation did not run or the pool is empty. To get a valid waypoint, we simply increment the highest used waypoint by one.
-								 * NOTE: This ignores the setting of $opt[logic][waypoint_pool][fill_gaps]
+								 * NOTE: This ignores the setting of opt[logic][waypoint_pool][fill_gaps]
 								 * CAUTION: This statement is realy slow and you should always keep your waypoint pool filled with some waypoint on a production server
 								 */
 								INSERT INTO `cache_waypoint_pool` (`wp_oc`, `uuid`) 
@@ -667,30 +728,31 @@
 						/* dont overwrite date values while XML client is running */
 						IF ISNULL(@XMLSYNC) OR @XMLSYNC!=1 THEN
 							IF OLD.`cache_id`!=NEW.`cache_id` OR 
-							   OLD.`uuid`!=NEW.`uuid` OR 
+							   OLD.`uuid`!=BINARY NEW.`uuid` OR 
 							   OLD.`node`!=NEW.`node` OR 
 							   OLD.`date_created`!=NEW.`date_created` OR 
 							   OLD.`is_publishdate`!=NEW.`is_publishdate` OR 
 							   OLD.`user_id`!=NEW.`user_id` OR 
-							   OLD.`name`!=NEW.`name` OR 
+							   OLD.`name`!=BINARY NEW.`name` OR 
 							   OLD.`longitude`!=NEW.`longitude` OR 
 							   OLD.`latitude`!=NEW.`latitude` OR 
 							   OLD.`type`!=NEW.`type` OR 
 							   OLD.`status`!=NEW.`status` OR 
-							   OLD.`country`!=NEW.`country` OR 
+							   OLD.`country`!=BINARY NEW.`country` OR 
 							   OLD.`date_hidden`!=NEW.`date_hidden` OR 
 							   OLD.`size`!=NEW.`size` OR 
 							   OLD.`difficulty`!=NEW.`difficulty` OR 
 							   OLD.`terrain`!=NEW.`terrain` OR 
-							   OLD.`logpw`!=NEW.`logpw` OR 
+							   OLD.`logpw`!=BINARY NEW.`logpw` OR 
 							   OLD.`search_time`!=NEW.`search_time` OR 
 							   OLD.`way_length`!=NEW.`way_length` OR 
-							   OLD.`wp_gc`!=NEW.`wp_gc` OR
+							   OLD.`wp_gc`!=BINARY NEW.`wp_gc` OR
 								 /* See notes on wp_gc_maintained in modification-dates.txt. */
-							   OLD.`wp_nc`!=NEW.`wp_nc` OR 
-							   OLD.`wp_oc`!=NEW.`wp_oc` OR 
-							   OLD.`default_desclang`!=NEW.`default_desclang` OR 
-							   OLD.`date_activate`!=NEW.`date_activate` THEN
+							   OLD.`wp_nc`!=BINARY NEW.`wp_nc` OR 
+							   OLD.`wp_oc`!=BINARY NEW.`wp_oc` OR 
+							   OLD.`default_desclang`!=BINARY NEW.`default_desclang` OR 
+							   OLD.`date_activate`!=NEW.`date_activate` OR
+								 OLD.`show_cachelists`!=NEW.`show_cachelists` THEN
 
 								SET NEW.`last_modified`=NOW();
 							END IF;
@@ -822,7 +884,7 @@
 	sql("CREATE TRIGGER `cacheDescAfterUpdate` AFTER UPDATE ON `cache_desc` 
 				FOR EACH ROW 
 					BEGIN 
-						IF OLD.`language`!=NEW.`language` OR OLD.`cache_id`!=NEW.`cache_id` THEN
+						IF OLD.`language`!=BINARY NEW.`language` OR OLD.`cache_id`!=NEW.`cache_id` THEN
 							IF OLD.`cache_id`!=NEW.`cache_id` THEN
 								CALL sp_update_caches_descLanguages(OLD.`cache_id`);
 								CALL sp_update_cache_listingdate(OLD.`cache_id`);
@@ -836,7 +898,7 @@
 							IF (OLD.`date_created` < LEFT(NOW(),10)) THEN
 								INSERT IGNORE INTO `cache_desc_modified` (`cache_id`, `language`, `date_modified`, `date_created`, `desc`, `desc_html`, `desc_htmledit`, `hint`, `short_desc`, `restored_by`) VALUES (OLD.`cache_id`, OLD.`language`, NOW(), OLD.`date_created`, OLD.`desc`, OLD.`desc_html`, OLD.`desc_htmledit`, OLD.`hint`, OLD.`short_desc`, IFNULL(@restoredby,0));
 							END IF;
-							IF NEW.`language`!=OLD.`language` THEN
+							IF NEW.`language`!=BINARY OLD.`language` THEN
 								INSERT IGNORE INTO `cache_desc_modified` (`cache_id`, `language`, `date_modified`, `desc`) VALUES (NEW.`cache_id`, NEW.`language`, NOW(), NULL);
 							END IF;
 						END IF;
@@ -925,7 +987,20 @@
 					BEGIN 
 						DECLARE done INT DEFAULT 0;
 						DECLARE notify_user_id INT;
-						DECLARE cur1 CURSOR FOR SELECT `cache_watches`.`user_id` FROM `cache_watches` INNER JOIN `caches` ON `cache_watches`.`cache_id`=`caches`.`cache_id` INNER JOIN `cache_status` ON `caches`.`status`=`cache_status`.`id` WHERE `cache_watches`.`cache_id`=NEW.cache_id AND `cache_status`.`allow_user_view`=1;
+						DECLARE cur1 CURSOR FOR
+							/* watches from `cache_watches` */ 
+							SELECT `cache_watches`.`user_id` 
+							FROM `cache_watches` 
+							INNER JOIN `caches` ON `cache_watches`.`cache_id`=`caches`.`cache_id` 
+							INNER JOIN `cache_status` ON `caches`.`status`=`cache_status`.`id` 
+							WHERE `cache_watches`.`cache_id`=NEW.cache_id AND `cache_status`.`allow_user_view`=1
+							UNION    /* UNION discards duplicates */
+							/* watches from `cache_list_watches` */
+							SELECT `clw`.`user_id` FROM `cache_list_watches` `clw` 
+							INNER JOIN `cache_list_items` `cli` ON `clw`.`cache_list_id`=`cli`.`cache_list_id`
+							INNER JOIN `caches` ON `cli`.`cache_id`=`caches`.`cache_id` 
+							INNER JOIN `cache_status` ON `caches`.`status`=`cache_status`.`id` 
+							WHERE `cli`.`cache_id`=NEW.cache_id AND `cache_status`.`allow_user_view`=1;
 						DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
 						CALL sp_update_logstat(NEW.`cache_id`, NEW.`user_id`, NEW.`type`, FALSE);
@@ -947,7 +1022,7 @@
 						/* dont overwrite `last_modified` while XML client is running */
 						IF ISNULL(@XMLSYNC) OR @XMLSYNC!=1 THEN
 							IF NEW.`id`!=OLD.`id` OR
-							   NEW.`uuid`!=OLD.`uuid` OR
+							   NEW.`uuid`!=BINARY OLD.`uuid` OR
 							   NEW.`node`!=OLD.`node` OR
 							   NEW.`date_created`!=OLD.`date_created` OR
 							   NEW.`cache_id`!=OLD.`cache_id` OR
@@ -955,7 +1030,7 @@
 							   NEW.`type`!=OLD.`type` OR
 							   NEW.`oc_team_comment`!=OLD.`oc_team_comment` OR
 							   NEW.`date`!=OLD.`date` OR
-							   NEW.`text`!=OLD.`text` OR
+							   NEW.`text`!=BINARY OLD.`text` OR
 							   NEW.`text_html`!=OLD.`text_html` THEN
 								SET NEW.`last_modified`=NOW();
 							END IF;
@@ -972,7 +1047,10 @@
 	sql("CREATE TRIGGER `cacheLogsAfterUpdate` AFTER UPDATE ON `cache_logs` 
 				FOR EACH ROW 
 					BEGIN 
-						IF OLD.`cache_id`!=NEW.`cache_id` OR OLD.`user_id`!=NEW.`user_id` OR OLD.`type`!=NEW.`type` OR OLD.`date`!=NEW.`date` THEN
+						IF OLD.`cache_id`!=NEW.`cache_id` OR 
+						   OLD.`user_id`!=NEW.`user_id` OR 
+							 OLD.`type`!=NEW.`type` OR 
+							 OLD.`date`!=NEW.`date` THEN
 							CALL sp_update_logstat(OLD.`cache_id`, OLD.`user_id`, OLD.`type`, TRUE);
 							CALL sp_update_logstat(NEW.`cache_id`, NEW.`user_id`, NEW.`type`, FALSE);
 						END IF;
@@ -1042,7 +1120,7 @@
 	sql("CREATE TRIGGER `cacheWatchesAfterInsert` AFTER INSERT ON `cache_watches` 
 				FOR EACH ROW 
 					BEGIN 
-						CALL sp_update_watchstat(NEW.`cache_id`, FALSE);
+						CALL sp_update_watchstat(NEW.`cache_id`);
 					END;");
 
 	sql_dropTrigger('cacheWatchesAfterUpdate');
@@ -1050,8 +1128,8 @@
 				FOR EACH ROW 
 					BEGIN 
 						IF NEW.`cache_id`!=OLD.`cache_id` THEN
-							CALL sp_update_watchstat(OLD.`cache_id`, TRUE);
-							CALL sp_update_watchstat(NEW.`cache_id`, FALSE);
+							CALL sp_update_watchstat(OLD.`cache_id`);
+							CALL sp_update_watchstat(NEW.`cache_id`);
 						END IF;
 					END;");
 
@@ -1059,10 +1137,169 @@
 	sql("CREATE TRIGGER `cacheWatchesAfterDelete` AFTER DELETE ON `cache_watches` 
 				FOR EACH ROW 
 					BEGIN 
-						CALL sp_update_watchstat(OLD.`cache_id`, TRUE);
+						CALL sp_update_watchstat(OLD.`cache_id`);
 					END;");
 
-	sql_dropTrigger('emailUserBeforeInsert');
+	sql_dropTrigger('cacheListsBeforeInsert');
+	sql("CREATE TRIGGER `cacheListsBeforeInsert` BEFORE INSERT ON `cache_lists` 
+				FOR EACH ROW 
+					BEGIN 
+						/* dont overwrite date values while XML client is running */
+						IF ISNULL(@XMLSYNC) OR @XMLSYNC!=1 THEN
+							SET NEW.`date_created`=NOW();
+							SET NEW.`last_modified`=NOW();
+						END IF;
+
+						IF ISNULL(NEW.`uuid`) OR NEW.`uuid`='' THEN
+							SET NEW.`uuid`=CREATE_UUID();
+						END IF;
+					END;");
+
+	sql_dropTrigger('cacheListsAfterInsert');
+	sql("CREATE TRIGGER `cacheListsAfterInsert` AFTER INSERT ON `cache_lists` 
+				FOR EACH ROW
+					BEGIN
+						INSERT IGNORE INTO `stat_cache_lists` (`cache_list_id`) VALUES (NEW.`id`);
+					END;");
+
+	sql_dropTrigger('cacheListsBeforeUpdate');
+	sql("CREATE TRIGGER `cacheListsBeforeUpdate` BEFORE UPDATE ON `cache_lists` 
+				FOR EACH ROW 
+					BEGIN 
+					  IF NEW.`id` != OLD.`id` THEN
+							CALL error_cache_list_id_must_not_be_changed();
+						END IF;
+						IF NEW.`uuid` != BINARY OLD.`uuid` OR
+						   NEW.`node` != OLD.`node` OR
+						   NEW.`user_id` != OLD.`user_id` OR
+						   NEW.`name` != BINARY OLD.`name` OR 
+							 NEW.`is_public` != OLD.`is_public` OR
+							 NEW.`description` != BINARY OLD.`description` OR
+							 NEW.`desc_htmledit` != OLD.`desc_htmledit` THEN
+							/* dont overwrite date values while XML client is running */
+							IF ISNULL(@XMLSYNC) OR @XMLSYNC!=1 THEN
+								SET NEW.`last_modified`=NOW();
+							END IF;
+						END IF;
+						IF OLD.`is_public` != NEW.`is_public` THEN
+							SET NEW.`last_state_change`=NOW();   /* for XML interface */
+							IF NOT NEW.`is_public` THEN
+								DELETE FROM `cache_list_watches` WHERE `cache_list_watches`.`cache_list_id`=NEW.`id` AND `cache_list_watches`.`user_id` != NEW.`user_id`;
+							END IF;
+						END IF;
+					END;");
+
+	sql_dropTrigger('cacheListsBeforeDelete');
+	sql("CREATE TRIGGER `cacheListsBeforeDelete` BEFORE DELETE ON `cache_lists` 
+				FOR EACH ROW 
+					BEGIN 
+						SET @DELETING_CACHELIST=TRUE;
+						DELETE FROM `cache_list_watches` WHERE `cache_list_watches`.`cache_list_id`=OLD.`id`;
+						DELETE FROM `cache_list_items` WHERE `cache_list_items`.`cache_list_id`=OLD.`id`;
+						DELETE FROM `stat_cache_lists` WHERE `cache_list_id`=OLD.`id`;
+						SET @DELETING_CACHELIST=FALSE;
+					END;");
+
+	sql_dropTrigger('cacheListsAfterDelete');
+	sql("CREATE TRIGGER `cacheListsAfterDelete` AFTER DELETE ON `cache_lists` 
+				FOR EACH ROW
+					BEGIN
+						INSERT IGNORE INTO `removed_objects` (`localId`, `uuid`, `type`, `node`) VALUES (OLD.`id`, OLD.`uuid`, 8, OLD.`node`);
+					END;");
+
+	sql_dropTrigger('cacheListItemsAfterInsert');
+	sql("CREATE TRIGGER `cacheListItemsAfterInsert` AFTER INSERT ON `cache_list_items`
+				FOR EACH ROW 
+					BEGIN
+						/* dont overwrite date values while XML client is running */
+						IF ISNULL(@XMLSYNC) OR @XMLSYNC!=1 THEN
+							UPDATE `cache_lists` SET `last_modified`=NOW(), `last_added`=NOW() WHERE `cache_lists`.`id`=NEW.`cache_list_id`;
+							UPDATE `stat_cache_lists` SET `entries`=`entries`+1 WHERE `stat_cache_lists`.`cache_list_id`=NEW.`cache_list_id`;
+							IF (SELECT `user_id` FROM `cache_list_watches` `clw` WHERE `clw`.`cache_list_id`=NEW.`cache_list_id` LIMIT 1) IS NOT NULL THEN
+								CALL sp_update_watchstat(NEW.`cache_id`);
+							END IF;
+						END IF; 
+					END;");
+
+	sql_dropTrigger('cacheListItemsAfterUpdate');
+	sql("CREATE TRIGGER `cacheListItemsAfterUpdate` AFTER UPDATE ON `cache_list_items` 
+				FOR EACH ROW 
+					BEGIN
+						/* dont overwrite date values while XML client is running */
+						IF ISNULL(@XMLSYNC) OR @XMLSYNC!=1 THEN
+							UPDATE `cache_lists` SET `last_modified`=NOW() WHERE `cache_lists`.`id`=OLD.`cache_list_id`;
+							IF NEW.`cache_list_id` != OLD.`cache_list_id` THEN
+								UPDATE `stat_cache_lists` SET `entries`=`entries`-1 WHERE `stat_cache_lists`.`cache_list_id`=OLD.`cache_list_id`;  
+								UPDATE `stat_cache_lists` SET `entries`=`entries`+1 WHERE `stat_cache_lists`.`cache_list_id`=NEW.`cache_list_id`;
+								UPDATE `cache_lists` SET `last_modified`=NOW(), `last_added`=NOW() WHERE `cache_lists`.`id`=NEW.`cache_list_id`;
+							END IF;
+							IF (SELECT `user_id` FROM `cache_list_watches` `clw` WHERE `clw`.`cache_list_id`=OLD.`cache_list_id` LIMIT 1) IS NOT NULL THEN
+								CALL sp_update_watchstat(OLD.`cache_id`);
+							END IF;
+							IF (SELECT `user_id` FROM `cache_list_watches` `clw` WHERE `clw`.`cache_list_id`=NEW.`cache_list_id` LIMIT 1) IS NOT NULL THEN
+								CALL sp_update_watchstat(NEW.`cache_id`);
+							END IF;
+						END IF;
+					END;");
+
+	sql_dropTrigger('cacheListItemsAfterDelete');
+	sql("CREATE TRIGGER `cacheListItemsAfterDelete` AFTER DELETE ON `cache_list_items` 
+				FOR EACH ROW 
+					BEGIN
+						/* avoid recursive access to cache_lists; optimization */
+						IF NOT IFNULL(@DELETING_CACHELIST,FALSE) THEN
+							/* dont overwrite date values while XML client is running */
+							IF ISNULL(@XMLSYNC) OR @XMLSYNC!=1 THEN
+								UPDATE `stat_cache_lists` SET `entries`=`entries`-1 WHERE `stat_cache_lists`.`cache_list_id`=OLD.`cache_list_id`;
+								UPDATE `cache_lists` SET `last_modified`=NOW() WHERE `cache_lists`.`id`=OLD.`cache_list_id`;
+								IF (SELECT `user_id` FROM `cache_list_watches` `clw` WHERE `clw`.`cache_list_id`=OLD.`cache_list_id` LIMIT 1) IS NOT NULL THEN
+									CALL sp_update_watchstat(OLD.`cache_id`);
+								END IF;
+							END IF;
+						END IF;
+					END;");
+
+	sql_dropTrigger('cacheListWatchesAfterInsert');
+	sql("CREATE TRIGGER `cacheListWatchesAfterInsert` AFTER INSERT ON `cache_list_watches` 
+				FOR EACH ROW 
+					BEGIN
+						/* dont overwrite date values while XML client is running */
+						IF ISNULL(@XMLSYNC) OR @XMLSYNC!=1 THEN
+							UPDATE `stat_cache_lists` SET `watchers`=`watchers`+1 WHERE `stat_cache_lists`.`cache_list_id`=NEW.`cache_list_id`;
+							CALL sp_update_list_watchstat(NEW.`cache_list_id`);
+						END IF; 
+					END;");
+
+	sql_dropTrigger('cacheListWatchesAfterUpdate');
+	sql("CREATE TRIGGER `cacheListWatchesAfterUpdate` AFTER UPDATE ON `cache_list_watches` 
+				FOR EACH ROW 
+					BEGIN
+						/* dont overwrite date values while XML client is running */
+						IF ISNULL(@XMLSYNC) OR @XMLSYNC!=1 THEN
+							IF NEW.`cache_list_id` != OLD.`cache_list_id` THEN
+								UPDATE `stat_cache_lists` SET `watchers`=`watchers`-1 WHERE `stat_cache_lists`.`cache_list_id`=OLD.`cache_list_id`;  
+								UPDATE `stat_cache_lists` SET `watchers`=`watchers`+1 WHERE `stat_cache_lists`.`cache_list_id`=NEW.`cache_list_id`;
+							END IF;
+							CALL sp_update_list_watchstat(OLD.`cache_list_id`);
+							CALL sp_update_list_watchstat(NEW.`cache_list_id`);
+						END IF;
+					END;");
+
+	sql_dropTrigger('cacheListWatchesAfterDelete');
+	sql("CREATE TRIGGER `cacheListWatchesAfterDelete` AFTER DELETE ON `cache_list_watches` 
+				FOR EACH ROW 
+					BEGIN
+						/* avoid recursive access to cache_lists; optimization */
+						IF NOT IFNULL(@DELETING_CACHELIST,FALSE) THEN
+							/* dont overwrite date values while XML client is running */
+							IF ISNULL(@XMLSYNC) OR @XMLSYNC!=1 THEN
+								UPDATE `stat_cache_lists` SET `watchers`=`watchers`-1 WHERE `stat_cache_lists`.`cache_list_id`=OLD.`cache_list_id`;
+								CALL sp_update_list_watchstat(OLD.`cache_list_id`);
+							END IF;
+						END IF;
+					END;");
+
+		sql_dropTrigger('emailUserBeforeInsert');
 	sql("CREATE TRIGGER `emailUserBeforeInsert` BEFORE INSERT ON `email_user` 
 				FOR EACH ROW 
 					BEGIN 
@@ -1123,7 +1360,19 @@
 					BEGIN 
 						/* dont overwrite date values while XML client is running */
 						IF ISNULL(@XMLSYNC) OR @XMLSYNC!=1 THEN
-							IF NEW.`id`!=OLD.`id` OR NEW.`uuid`!=OLD.`uuid` OR NEW.`node`!=OLD.`node` OR NEW.`date_created`!=OLD.`date_created` OR NEW.`url`!=OLD.`url` OR NEW.`title`!=OLD.`title` OR NEW.`object_id`!=OLD.`object_id` OR NEW.`object_type`!=OLD.`object_type` OR NEW.`spoiler`!=OLD.`spoiler` OR NEW.`local`!=OLD.`local` OR NEW.`unknown_format`!=OLD.`unknown_format` OR NEW.`display`!=OLD.`display` OR NEW.`mappreview`!=OLD.`mappreview` THEN
+							IF NEW.`id`!=OLD.`id` OR 
+							   NEW.`uuid`!=BINARY OLD.`uuid` OR 
+								 NEW.`node`!=OLD.`node` OR 
+								 NEW.`date_created`!=OLD.`date_created` OR 
+								 NEW.`url`!=BINARY OLD.`url` OR 
+								 NEW.`title`!=BINARY OLD.`title` OR 
+								 NEW.`object_id`!=OLD.`object_id` OR 
+								 NEW.`object_type`!=OLD.`object_type` OR 
+								 NEW.`spoiler`!=OLD.`spoiler` OR 
+								 NEW.`local`!=OLD.`local` OR 
+								 NEW.`unknown_format`!=OLD.`unknown_format` OR 
+								 NEW.`display`!=OLD.`display` OR 
+								 NEW.`mappreview`!=OLD.`mappreview` THEN
 								/* everything except last_url_check, thumb_url and thumb_last_generated */
 								SET NEW.`last_modified`=NOW();
 							END IF;
@@ -1296,13 +1545,13 @@
 						/* dont overwrite date values while XML client is running */
 						IF ISNULL(@XMLSYNC) OR @XMLSYNC!=1 THEN
 							IF NEW.`user_id`!=OLD.`user_id` OR 
-							   NEW.`uuid`!=OLD.`uuid` OR 
+							   NEW.`uuid`!=BINARY OLD.`uuid` OR 
 							   NEW.`node`!=OLD.`node` OR 
 							   NEW.`date_created`!=OLD.`date_created` OR 
-							   NEW.`username`!=OLD.`username` OR 
-							   NEW.`country`!=OLD.`country` OR 
+							   NEW.`username`!=BINARY OLD.`username` OR 
+							   NEW.`country`!=BINARY OLD.`country` OR 
 							   NEW.`pmr_flag`!=OLD.`pmr_flag` OR
-							   NEW.`description`!=OLD.`description` THEN
+							   NEW.`description`!=BINARY OLD.`description` THEN
 							   
 								SET NEW.`last_modified`=NOW();
 							END IF;
@@ -1322,6 +1571,7 @@
 						DELETE FROM `cache_ignore` WHERE `user_id`=OLD.user_id;
 						DELETE FROM `cache_rating` WHERE `user_id`=OLD.user_id;
 						DELETE FROM `cache_watches` WHERE `user_id`=OLD.user_id;
+						DELETE FROM `cache_lists` WHERE `user_id`=OLD.user_id;
 						DELETE FROM `stat_user` WHERE `user_id`=OLD.user_id;
 						DELETE FROM `user_options` WHERE `user_id`=OLD.user_id;
 						DELETE FROM `user_statpic` WHERE `user_id`=OLD.user_id;

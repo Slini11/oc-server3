@@ -18,20 +18,20 @@
 		</title>
 		<meta name="keywords" content="Geocaching, Geocache, Cache, Geocashing, Schnitzeljagd, Schatzsuche, GPS, Openstreetmap, kostenlos, GPX, GPX download, Koordinaten, Hobby, Natur" />
 			{* siehe http://forum.opencaching-network.org/index.php?topic=3065.0 *}
-		<meta name="description" content="Opencaching.de ist das freie Portal für Geocaching, ein GPS-Schatzsuche-Spiel: Es werden kleine Behälter versteckt, die anhand von GPS-Koordinaten zu finden sind." />
-		<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+		<meta name="description" content="Opencaching.de ist das freie Portal für Geocaching, ein GPS-Schatzsuche-Spiel. Hierbei müssen anhand von GPS-Koordinaten Behälter oder Objekte gefunden werden." />
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 		<meta http-equiv="Content-Style-Type" content="text/css" />
 		<meta http-equiv="Content-Language" content="{$opt.template.locale}" />
 		<meta http-equiv="gallerimg" content="no" />
 		<meta http-equiv="cache-control" content="no-cache" />
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 		<link rel="SHORTCUT ICON" href="favicon.ico" />
 		<link rel="apple-touch-icon" href="resource2/{$opt.template.style}/images/oclogo/apple-touch-icon-iphone.png" />
 		<link rel="apple-touch-icon" sizes="72x72" href="resource2/{$opt.template.style}/images/oclogo/apple-touch-icon-ipad.png" />
 		<link rel="apple-touch-icon" sizes="114x114" href="resource2/{$opt.template.style}/images/oclogo/apple-touch-icon-iphone-retina.png" />
 		<link rel="apple-touch-icon" sizes="144x144" href="resource2/{$opt.template.style}/images/oclogo/apple-touch-icon-ipad-retina.png" />
 		<link rel="stylesheet" type="text/css" media="screen,projection" href="resource2/{$opt.template.style}/css/style_screen.css?ft={$screen_css_time}" />
-		<!--[if IE]>
+		<!--[if lt IE 9]>
 			<link rel="stylesheet" type="text/css" media="screen,projection" href="resource2/{$opt.template.style}/css/style_screen_msie.css?ft={$screen_msie_css_time}" />
 		<![endif]-->
 		<link rel="stylesheet" type="text/css" media="print" href="resource2/{$opt.template.style}/css/style_print.css?ft={$print_css_time}" />
@@ -73,6 +73,17 @@
 					document.getElementsByName(bname)[0].className = "formbutton_active";
 					window.setTimeout('resetbutton(\'' + bname + '\')', 350);
 				}
+
+				img1 = new Image();
+				img1.src = "resource2/ocstyle/images/page/nav2-bg.png";
+				img2 = new Image();
+				img2.src = "resource2/ocstyle/images/page/nav2-sel-bg.png";
+				img3 = new Image();
+				img3.src = "resource2/ocstyle/images/page/nav3-title-bg.png";
+				img4 = new Image();
+				img4.src = "resource2/ocstyle/images/page/section-bg.png";
+				img5 = new Image();
+				img5.src = "resource2/ocstyle/images/page/listheader-bg.png";
 			//-->
 			</script>
 		{/literal}
@@ -89,8 +100,8 @@
 			<script src="resource2/{$opt.template.style}/js/session.js" type="text/javascript"></script>
 		{/if}
 		{if $garmin==true}
-		  <script type="text/javascript" src="resource2/{$opt.template.style}/js/GarminPrototype.js"></script>
-		  <script type="text/javascript" src="http://developer.garmin.com/web/communicator-api/garmin/device/GarminDeviceDisplay.js"> </script>
+		  <script type="text/javascript" src="resource2/{$opt.template.style}/js/communicator-api/prototype/prototype.js"></script>
+		  <script type="text/javascript" src="resource2/{$opt.template.style}/js/communicator-api/garmin/device/GarminDeviceDisplay.js"></script>
 		  <script type="text/javascript">var garmin_gpx_filename = '{$cache.wpoc}.gpx';</script>
 		  <script type="text/javascript" src="resource2/{$opt.template.style}/js/GarminDisplay.js"></script>
 		  {* <!-- <script type="text/javascript" src="resource2/{$opt.template.style}/js/search.js"></script> --> *}
@@ -105,7 +116,7 @@
 {if $garmin==true} onload="load('{$cache.latitude}','{$cache.longitude}','{$cache.cacheid}','{$opt.lib.garmin.url}','{$opt.lib.garmin.key}','{$opt.template.locale}')"{/if}
 {foreach from=$opt.page.body_load item=loadItem name=bodyload}{if $smarty.foreach.bodyload.first} onload="{/if}{$loadItem};{if $smarty.foreach.bodyload.last}"{/if}{/foreach}
 {foreach from=$opt.page.body_unload item=unloadItem name=bodyunload}{if $smarty.foreach.bodyunload.first} onunload="{/if}{$unloadItem};{if $smarty.foreach.bodyunload.last}"{/if}{/foreach}
-{if $opt.template.popup!=false} class="popup"{/if} {if $greybg}style="background:#ededed"{/if}>
+{if $opt.template.popup!=false} class="popup"{/if}>
 	{if $opt.template.popup!=true}
 		<div id="overall">
 			<div id="langstripe">
@@ -124,7 +135,7 @@
 							{nocache}
 								&nbsp;
 								{if $login.userid==0}
-									<b><form action="login.php" method="post" enctype="application/x-www-form-urlencoded" name="login" dir="ltr" style="display: inline;">{t}User{/t}:&nbsp;&nbsp;<input name="email" size="10" type="text" class="textboxes" value="" />&nbsp;&nbsp;&nbsp;{t}Password{/t}:&nbsp;&nbsp;<input name="password" size="10" type="password" class="textboxes" value="" />&nbsp;<input type="hidden" name="action" value="login" /><input type="hidden" name="target" value="{$opt.page.target|escape}" /><input type="hidden" name="source" value="titlebar" />&nbsp;<input name="LogMeIn" value="{t}Login{/t}" class="formbutton" style="width: 68px;" type="submit" onclick="submitbutton('LogMeIn')" /></form></b>	
+									<b><form action="login.php" method="post" enctype="application/x-www-form-urlencoded" name="login" dir="ltr" style="display: inline;">{t}User:{/t}&nbsp;&nbsp;<input name="email" size="10" type="text" class="textboxes" value="" />&nbsp;&nbsp;&nbsp;{t}Password:{/t}&nbsp;&nbsp;<input name="password" size="10" type="password" class="textboxes" value="" />&nbsp;<input type="hidden" name="action" value="login" /><input type="hidden" name="target" value="{$opt.page.target|escape}" /><input type="hidden" name="source" value="titlebar" />&nbsp;<input name="LogMeIn" value="{t}Login{/t}" class="formbutton" style="width: 74px;" type="submit" onclick="submitbutton('LogMeIn')" /></form></b>	
 								{else}  {* Ocprop: <a href="myhome.php">(.*?)<\/a>.*?<a href="login.php
 								                   <a href="myhome.php">.*?<a href="login.php\?action=logout"> *}
 									<b>{t}Logged in as{/t} <a href="myhome.php">{$login.username|escape}</a></b> - <a href="login.php?action=logout">{t}Logout{/t}</a>
@@ -165,12 +176,8 @@
 			</div> <!-- langstripe -->
 			<div class="page-container-1" style="position: relative;">
 
-			{if $greybg}
-				<div style="color:grey; position:absolute; top:15px; right:-100px">HWR-Info-Grey<br />Edition</div>
-			{else}
-				<div id="bg1">&nbsp;</div>
-				<div id="bg2">&nbsp;</div>
-			{/if}
+			<div id="bg1">&nbsp;</div>
+			<div id="bg2">&nbsp;</div>
 
 			{* <!-- HEADER --> *}
 			{* <!-- Debugschalter hier wieder einsetzen --> *}
@@ -206,12 +213,13 @@
 					<div id="breadcrumb_fullsize">{include file="sys_breadcrumb.tpl" items="$breadcrumb"}</div>
 				{else}
 					<div id="breadcrumb">{include file="sys_breadcrumb.tpl" items="$breadcrumb"}</div>
-					<div id="suchbox"><form action="searchplugin.php" method="post"><b>{t}Waypoint-Search{/t}:</b>&nbsp;<input type="hidden" name="sourceid" value="waypoint-search" /> <input type="text" name="userinput" size="10" /> <input type="submit" name="wpsearch" class="formbutton" style="width:auto" value="&nbsp;{t}Go{/t}&nbsp;" onclick="submitbutton('wpsearch')" /></form></div>
+					<div id="suchbox"><form action="searchplugin.php" method="post"><b>{t}Waypoint-Search:{/t}</b>&nbsp;<input type="hidden" name="sourceid" value="waypoint-search" /> <input type="text" name="userinput" size="10" class="waypoint" /> <input type="submit" name="wpsearch" class="formbutton" style="width:auto" value="&nbsp;{t}Go{/t}&nbsp;" onclick="submitbutton('wpsearch')" /></form></div>
 				{/if}
 			</div>
 
 			{if $helplink != ""}
 				<div class="tplhelp">{$helplink}<img src="resource2/ocstyle/images/misc/32x32-help.png" /></a></div>
+			    <!--[if IE]><div></div><![endif]-->
 			{/if}
 
 			{* <!-- NAVIGATION --> *}				
@@ -232,11 +240,10 @@
 					<a href="http://www.opencaching.de" target="_blank"><img src="resource2/{$opt.template.style}/images/nodes/oc-de.png" width="100" height="22" /></a><br />
 					<a href="http://www.opencachingspain.es" target="_blank"><img src="resource2/{$opt.template.style}/images/nodes/oc-es.png" width="100" height="22" /></a><br />
 					<a href="http://www.opencaching.it" target="_blank"><img src="resource2/{$opt.template.style}/images/nodes/oc-it.png" width="100" height="22" /></a><br />
-					<a href="http://www.opencaching.no" target="_blank"><img src="resource2/{$opt.template.style}/images/nodes/oc-no.png" width="100" height="22" /></a><br />
 					<a href="http://www.opencaching.nl" target="_blank"><img src="resource2/{$opt.template.style}/images/nodes/oc-nl.png" width="100" height="22" /></a><br />
 					<a href="http://www.opencaching.pl" target="_blank"><img src="resource2/{$opt.template.style}/images/nodes/oc-pl.png" width="100" height="22" /></a><br />
-					<a href="http://www.opencaching.se" target="_blank"><img src="resource2/{$opt.template.style}/images/nodes/oc-se.png" width="100" height="22" /></a><br />
 					<a href="http://www.opencaching.org.uk" target="_blank"><img src="resource2/{$opt.template.style}/images/nodes/oc-org-uk.png" width="100" height="22" /></a><br />
+					<a href="http://www.opencaching.ro" target="_blank"><img src="resource2/{$opt.template.style}/images/nodes/oc-ro.png" width="100" height="22" /></a><br />
 					<a href="http://www.opencaching.us" target="_blank"><img src="resource2/{$opt.template.style}/images/nodes/oc-us.png" width="100" height="22" /></a>
 				</div>
 
@@ -288,18 +295,18 @@
 					<p class="content-txtbox-noshade-size5">
 						<small>
 							{nocache}
-								{t}Page timing{/t}: {$sys_runtime|sprintf:"%1.3f"} {t}sec{/t}<br />
+								{t}Page timing:{/t} {$sys_runtime|sprintf:"%1.3f"} {t}sec{/t}<br />
 								{if ($opt.template.caching == true)}
-									{t}Page cached{/t}: {if $sys_cached==true}{t}Yes{/t}{else}{t}No{/t}{/if}<br />
+									{t}Page cached:{/t} {if $sys_cached==true}{t}Yes{/t}{else}{t}No{/t}{/if}<br />
 								{/if}
 								{*
-								{t}DB connected{/t}: 
+								{t}DB connected:{/t} 
 								{if $sys_dbconnected==true}{t}Yes{/t}{else}{t}No{/t}{/if}
 								{if $sys_dbslave==true}, {t}Slave{/t}{/if}
 								<br />
 								*}
 							{/nocache}
-							{t}Created at{/t}: {"0"|date_format:$opt.format.datetime}
+							{t}Created at:{/t} {"0"|date_format:$opt.format.datetime}
 						</small>
 					</p>
 				</div>

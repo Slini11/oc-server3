@@ -31,8 +31,8 @@
 
 function search_output()
 {
-	global $opt, $tpl, $login, $NEWCACHES_DAYS;
-	global $enable_mapdisplay, $search_in_gm, $search_in_gm_zip;
+	global $opt, $tpl, $login;
+	global $enable_mapdisplay;
 	global $called_by_search, $called_by_profile_query, $options, $lat_rad, $lon_rad, $distance_unit;
 	global $startat, $caches_per_page, $sql;
 
@@ -75,8 +75,8 @@ function search_output()
 		$rCache['desclangs'] = mb_split(',', $rCache['desc_languages']);
 
 		// decide if the cache is new
-		$dDiff = abs(dateDiff('d', $rCache['date_created'], date('Y-m-d')));
-		$rCache['isnew'] = ($dDiff <= $NEWCACHES_DAYS);
+		$dDiff = dateDiff('d', $rCache['date_created'], date('Y-m-d'));
+		$rCache['isnew'] = ($dDiff <= NEWCACHES_DAYS);
 		
 		// get last logs
 		if ($options['sort'] != 'bymylastlog' || !$login->logged_in())
@@ -138,16 +138,18 @@ function search_output()
 	$tpl->assign('search_headline_caches', $called_by_search);
 	$tpl->assign('enable_mapdisplay', $enable_mapdisplay);
 
-	if ($called_by_profile_query)
+	// cachelist data
+	if (isset($options['cachelist']))
 	{
-		$tpl->assign('search_in_gm', '');
-		$tpl->assign('search_in_gm_zip', '');
+		$tpl->assign('cachelist', $options['cachelist']);
+		$tpl->assign('cachelist_pw', $options['cachelist_pw']);
 	}
 	else
-	{
-		$tpl->assign('search_in_gm', $search_in_gm);
-		$tpl->assign('search_in_gm_zip', $search_in_gm_zip);
-	}
+		$tpl->assign('cachelist', false);
+
+	// disable "edit options" for internally generated searches
+	if ($options['searchtype'] == 'bylist')
+	  $tpl->assign('disable_edit_options',true);
 
 	$tpl->display();
 }

@@ -5,7 +5,7 @@
 ***************************************************************************}
 
 	<div class="content2-pagetitle">
-		<img src="resource2/{$opt.template.style}/images/misc/32x32-tools.png" style="align: left; margin-right: 10px;" width="32" height="32" alt="" />Information on cache descriptions
+		<img src="resource2/{$opt.template.style}/images/misc/32x32-tools.png" style="margin-right: 10px;" width="32" height="32" alt="" />Information on cache descriptions
 	</div>
 	<div id="cachedescinfo" class="content-txtbox-noshade" style="padding-right: 25px;">
 	
@@ -135,15 +135,25 @@
 
 		<p><a name="time"></a><b>Effort:</b> How much time and way is to be expected, beginning at the starting point or parking lot, to find the cache and return to the starting point? Please assume that the geocacher is experienced, but will struggle to solve the one or other puzzle or quest. If you cannot pin down the time needed, keep the default of 0&nbsp;h / 0&nbsp;min and describe the effort. If you estimated the time assuming use of inline skates, a bicycle or car, please mention it in the cache description.</p>
 
+		<p><b>Waypoints:</b> If you published this cache also at other geocaching websites, you are encouraged to enter the corresponding waypoints here. geocaching.com waypoints have the format GCXXXXX, with XXXXX being up to 5 capital letters and/or digits. Navicache waypoints have the format NXXXX.</p>
+
 		<p><b>Cache attributes:</b> Use the attributes to specify properties of your cache, which may be selected by the <a href="search.php">search function</a>. Attributes may be estimated and depend on your knowledge of the site (e.g. frequent occurance of ticks). As searcher and finder of a cache, you may tell the owner about the usage and helpfullness of attributes or make suggestions. When describing your caches, please assume normal, dry weather conditions.</p>
 		<p><a href="#attributedesc">See below</a> for a complete explanation of cache attributes.</p>
 
 		<p><b>Short description:</b> Try to subsume your cache by a few words!</p>
+
 		<p><b>Description:</b> Enter any information which is needed to find the cache, but avoid spoiling it by telling too much! Additionally you can explain why you hide the cache here or e. g. what this monument is about.</p>
+
 		<p><b>Hint:</b> For the case the geocacher has no clue how to find it, give her a final aid to unhide it! </p>
+
 		<p><b>Hidden on:</b> The date when you did hide the cache. If you enter a future date, the cache will be listed as "temporarily not available", and you will have to change the state to "available" when the cache is hidden. For an event cache, enter the planned date of the event.</p>
+
 		<p><a name="logpw"></a><b>Password to log:</b> If specified, every finder has to enter this password when logging online. He will not be able to log "found it" without password. Case does not matter. Be careful when using 0, O, i or j, because these characters may be confused.</p>
+
+		<p><b>Show all cache lists:</b> This setting is enabled by default for new caches and can be changed afterwards. If enabled, all <a href="cachelists.php">public cache lists</a> that contain this cache and which are set to "visible for all users in cache listings" are displayed above the cache description text, right of the attributes. Otherwise, only lists of the viewing user and of the cache owner are displayed.</p>
+
 		<p><b>Terms of use:</b> Please read our terms of use carefully! We tried hard to make them brief and fair.</p>
+
 		<p><b>Pictures:</b> Pictures may be uploaded after entering and saving the cache listing: Open the listing and click "Edit" at the second-to-top menu. Look for the section "Pictures" and click on "Upload a picture".</p>
 
 		<br id="attributedesc" />
