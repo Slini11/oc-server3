@@ -92,11 +92,9 @@
             </td>
         </tr>
 
-        <tr><td class="spacer" colspan="3"></td></tr>
-
         <tr>
             <td colspan="3">
-                <span class="boldtext">{t}You can edit your map settings(<img src="resource2/ocstyle/images/map/35x35-configure.png" width="16px">) on the <a href="map2.php">map</a> directly.{/t}</span> <!-- TODO: Translation -->
+                <br /><span class="boldtext">{t}You can edit your map settings(<img src="resource2/ocstyle/images/map/35x35-configure.png" width="16px">) on the <a href="map2.php">map</a> directly.{/t}</span> <!-- TODO: Translation -->
             </td>
         </tr>
     </table>

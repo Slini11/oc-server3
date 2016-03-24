@@ -920,7 +920,7 @@ INSERT INTO `sys_menu` (`id`, `id_string`, `title`, `title_trans_id`, `menustrin
 INSERT INTO `sys_menu` (`id`, `id_string`, `title`, `title_trans_id`, `menustring`, `menustring_trans_id`, `access`, `href`, `visible`, `parent`, `position`, `color`, `sitemap`, `only_if_parent`) VALUES ('56', 'MNU_CACHES_PICTURE', 'Edit picture', '741', 'Edit picture', '741', '0', 'picture.php', '0', '10', '7', '', '0', NULL);
 INSERT INTO `sys_menu` (`id`, `id_string`, `title`, `title_trans_id`, `menustring`, `menustring_trans_id`, `access`, `href`, `visible`, `parent`, `position`, `color`, `sitemap`, `only_if_parent`) VALUES ('58', 'MNU_ADMIN_REPORTS', 'Reported caches', '750', 'Reported caches', '750', '1', 'adminreports.php', '1', '12', '2', '', '0', NULL);
 INSERT INTO `sys_menu` (`id`, `id_string`, `title`, `title_trans_id`, `menustring`, `menustring_trans_id`, `access`, `href`, `visible`, `parent`, `position`, `color`, `sitemap`, `only_if_parent`) VALUES ('59', 'MNU_CACHES_REPORT', 'Report cache', '772', 'Report cache', '772', '0', 'reportcache.php', '0', '10', '8', '', '0', NULL);
-INSERT INTO `sys_menu` (`id`, `id_string`, `title`, `title_trans_id`, `menustring`, `menustring_trans_id`, `access`, `href`, `visible`, `parent`, `position`, `color`, `sitemap`, `only_if_parent`) VALUES ('60', 'MNU_MYPROFILE_PUBLICSETTINGS', 'Additional Profile settings', '2573', 'Additional Profile settings', '2573', '0', 'mydetails.php', '0', '37', '2', '', '1', NULL);
+INSERT INTO `sys_menu` (`id`, `id_string`, `title`, `title_trans_id`, `menustring`, `menustring_trans_id`, `access`, `href`, `visible`, `parent`, `position`, `color`, `sitemap`, `only_if_parent`) VALUES ('60', 'MNU_MYPROFILE_PUBLICSETTINGS', 'Additional information', '2573', 'Additional Profile information', '2573', '0', 'mydetails.php', '0', '37', '2', '', '1', NULL);
 INSERT INTO `sys_menu` (`id`, `id_string`, `title`, `title_trans_id`, `menustring`, `menustring_trans_id`, `access`, `href`, `visible`, `parent`, `position`, `color`, `sitemap`, `only_if_parent`) VALUES ('62', 'MNU_CACHES_USERDETAILS', 'User details', '801', 'User details', '801', '0', 'viewuserdetails.php', '0', '10', '4', '', '0', NULL);
 INSERT INTO `sys_menu` (`id`, `id_string`, `title`, `title_trans_id`, `menustring`, `menustring_trans_id`, `access`, `href`, `visible`, `parent`, `position`, `color`, `sitemap`, `only_if_parent`) VALUES ('63', 'MNU_MYPROFILE_ADOPT', 'Adoptions', '827', 'Adoptions', '827', '0', 'adoptcache.php', '1', '9', '9', '', '1', NULL);
 INSERT INTO `sys_menu` (`id`, `id_string`, `title`, `title_trans_id`, `menustring`, `menustring_trans_id`, `access`, `href`, `visible`, `parent`, `position`, `color`, `sitemap`, `only_if_parent`) VALUES ('64', 'MNU_CACHES_ADOPT', 'Adoptions', '827', 'Adoptions', '827', '0', 'adoptcache.php', '0', '10', '9', '', '0', NULL);
@@ -2861,9 +2861,9 @@ INSERT INTO `sys_trans` (`id`, `text`, `last_modified`) VALUES ('2569', 'moved b
 INSERT INTO `sys_trans` (`id`, `text`, `last_modified`) VALUES ('2570', 'moved by %1 km', '2015-06-17 10:09:14');
 INSERT INTO `sys_trans` (`id`, `text`, `last_modified`) VALUES ('2571', 'Protect old coordinates', '2015-06-17 10:09:14');
 INSERT INTO `sys_trans` (`id`, `text`, `last_modified`) VALUES ('2572', 'Personal data', '2015-03-07 03:00:00');
-INSERT INTO `sys_trans` (`id`, `text`, `last_modified`) VALUES ('2573', 'Additional Profile settings', '2015-03-07 03:00:00');
-INSERT INTO `sys_trans` (`id`, `text`, `last_modified`) VALUES ('2574', 'My additional profile settings', '2015-03-07 03:00:00');
-INSERT INTO `sys_trans` (`id`, `text`, `last_modified`) VALUES ('2575', 'The following additional information is shown in your <a href="viewprofile.php">public profile</a>:', '2016-03-07 03:00:00');
+INSERT INTO `sys_trans` (`id`, `text`, `last_modified`) VALUES ('2573', 'Additional information', '2015-03-07 03:00:00');
+INSERT INTO `sys_trans` (`id`, `text`, `last_modified`) VALUES ('2574', 'My additional profile information', '2015-03-07 03:00:00');
+INSERT INTO `sys_trans` (`id`, `text`, `last_modified`) VALUES ('2575', 'The following information may also be shown in your <a href="viewprofile.php">public profile</a>:', '2016-03-07 03:00:00');
 INSERT INTO `sys_trans` (`id`, `text`, `last_modified`) VALUES ('2576', 'Don\'t disclose my e-mail address by default when sending e-mails to other users.', '2015-03-07 03:00:00');
 INSERT INTO `sys_trans` (`id`, `text`, `last_modified`) VALUES ('2578', 'OC settings', '2015-03-07 03:00:00');
 INSERT INTO `sys_trans` (`id`, `text`, `last_modified`) VALUES ('2579', 'My OC-website settings', '2015-03-07 03:00:00');
@@ -7469,9 +7469,9 @@ INSERT INTO `sys_trans_text` (`trans_id`, `lang`, `text`, `last_modified`) VALUE
 INSERT INTO `sys_trans_text` (`trans_id`, `lang`, `text`, `last_modified`) VALUES ('2570', 'DE', 'verlegt um %1 km', '2015-06-17 10:09:14');
 INSERT INTO `sys_trans_text` (`trans_id`, `lang`, `text`, `last_modified`) VALUES ('2571', 'DE', 'Altkoordinaten schützen', '2015-06-17 10:09:14');
 INSERT INTO `sys_trans_text` (`trans_id`, `lang`, `text`, `last_modified`) VALUES ('2572', 'DE', 'Persönliche Daten', '2015-03-07 03:00:00');
-INSERT INTO `sys_trans_text` (`trans_id`, `lang`, `text`, `last_modified`) VALUES ('2573', 'DE', 'Weitere Profileinstellungen', '2015-03-07 03:00:00');
-INSERT INTO `sys_trans_text` (`trans_id`, `lang`, `text`, `last_modified`) VALUES ('2574', 'DE', 'Meine weiteren Profileinstellungen', '2015-03-07 03:00:00');
-INSERT INTO `sys_trans_text` (`trans_id`, `lang`, `text`, `last_modified`) VALUES ('2575', 'DE', 'Die folgenden Infomationen werden zusätzlich in deinem <a href="viewprofile.php">öffentlichen Profil</a> angezeigt:', '2016-03-07 03:00:00');
+INSERT INTO `sys_trans_text` (`trans_id`, `lang`, `text`, `last_modified`) VALUES ('2573', 'DE', 'Weitere Angaben', '2015-03-07 03:00:00');
+INSERT INTO `sys_trans_text` (`trans_id`, `lang`, `text`, `last_modified`) VALUES ('2574', 'DE', 'Meine weiteren Profilangaben', '2015-03-07 03:00:00');
+INSERT INTO `sys_trans_text` (`trans_id`, `lang`, `text`, `last_modified`) VALUES ('2575', 'DE', 'Die folgenden Infomationen können zusätzlich in deinem <a href="viewprofile.php">öffentlichen Profil</a> angezeigt werden:', '2016-03-07 03:00:00');
 INSERT INTO `sys_trans_text` (`trans_id`, `lang`, `text`, `last_modified`) VALUES ('2576', 'DE', 'Wenn ich andere Benutzer anschreibe, wird meine E-Mail-Adresse standardmäßig nicht mitgeschickt.', '2015-03-07 03:00:00');
 INSERT INTO `sys_trans_text` (`trans_id`, `lang`, `text`, `last_modified`) VALUES ('2578', 'DE', 'OC-Einstellungen', '2015-03-07 03:00:00');
 INSERT INTO `sys_trans_text` (`trans_id`, `lang`, `text`, `last_modified`) VALUES ('2579', 'DE', 'Meine OC-Website-Einstellungen', '2015-03-07 03:00:00');

@@ -5,8 +5,8 @@
  ***************************************************************************}
 {* OCSTYLE *}
 <div class="content2-pagetitle">
-	<img src="resource2/{$opt.template.style}/images/profile/32x32-profile.png" style="margin-right: 10px;" width="32" height="32" alt="" />
-	{t}My additional profile settings{/t}
+	<img src="resource2/{$opt.template.style}/images/viewcache/new-entry-18.png" style="margin-right: 10px;" width="18" height="18" alt="" />
+	{t}My additional profile information{/t}
 </div>
 
 {include file="settingsmenu.tpl"}
@@ -16,7 +16,7 @@
 	<table class="table">
 		<tr>
 			<td colspan="3">
-				<span class="boldtext">{t}The following additional information is shown in your <a href="viewprofile.php">public profile</a>:{/t}</span><br /> <!-- TODO: Translation -->
+				<span class="boldtext">{t}The following information may also be shown in your <a href="viewprofile.php">public profile</a>:{/t}</span><br /> <!-- TODO: Translation -->
 				<img src="resource2/{$opt.template.style}/images/misc/hint.gif" border="0" width="15" height="11" alt="" align="middle" />
 				<span class="systemlink" style="font-size:10px;">{t}Only the <span class="public-setting">green entries</span> are visible in your <a href="viewprofile.php">public profile</a>.{/t}</span>
 			</td>
