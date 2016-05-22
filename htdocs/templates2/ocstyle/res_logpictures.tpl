@@ -21,25 +21,49 @@
         <tr>
             {assign var=piccount value=0}
             {assign var=lines value=0}
-            {foreach from=$pictures item=picture}
-                {if $piccount == 6}
-                    </tr><tr>
-                    {assign var=piccount value=0}
-                    {assign var=lines value=$lines+1}
-                {/if}
-                {if !$maxlines || $lines < $maxlines}
-                    <td>
-                        {include file="res_logpicture.tpl" picture=$picture}
-                    </td>
-                    {assign var=piccount value=$piccount+1}
-                {/if}
+
+            {if $received == true}
+            {foreach from=$rec_pictures item=picture}
+            {if $piccount == 6}
+        </tr>
+        <tr>
+            {assign var=piccount value=0}
+            {assign var=lines value=$lines+1}
+            {/if}
+            {if !$maxlines || $lines < $maxlines}
+                <td>
+                    {include file="res_logpicture.tpl" picture=$picture}
+                </td>
+                {assign var=piccount value=$piccount+1}
+            {/if}
             {/foreach}
+            {else}
+            {foreach from=$pictures item=picture}
+            {if $piccount == 6}
+        </tr>
+        <tr>
+            {assign var=piccount value=0}
+            {assign var=lines value=$lines+1}
+            {/if}
+            {if !$maxlines || $lines < $maxlines}
+                <td>
+                    {include file="res_logpicture.tpl" picture=$picture}
+                </td>
+                {assign var=piccount value=$piccount+1}
+            {/if}
+            {/foreach}
+            {/if}
             {* fill up remaining cells so that 2..5 pictures will not spread over container width *}
-            {if $piccount<6}<td width="{$itemwidth}px"></td>{/if}
-            {if $piccount<5}<td width="{$itemwidth}px"></td>{/if}
-            {if $piccount<4}<td width="{$itemwidth}px"></td>{/if}
-            {if $piccount<3}<td width="{$itemwidth}px"></td>{/if}
-            {if $piccount<2}<td width="{$itemwidth}px"></td>{/if}
+            {if $piccount<6}
+                <td width="{$itemwidth}px"></td>{/if}
+            {if $piccount<5}
+                <td width="{$itemwidth}px"></td>{/if}
+            {if $piccount<4}
+                <td width="{$itemwidth}px"></td>{/if}
+            {if $piccount<3}
+                <td width="{$itemwidth}px"></td>{/if}
+            {if $piccount<2}
+                <td width="{$itemwidth}px"></td>{/if}
         </tr>
     </table>
     <div style="height:8px"></div>

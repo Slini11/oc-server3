@@ -108,7 +108,7 @@ $tpl->assign_rs(
 // useless information when email protocol is cleaned-up (cronjob 'purge_logs')
 // $tpl->assign('emails', sql_value("SELECT COUNT(*) FROM `email_user` WHERE `from_user_id`='&1'", 0, $login->userid));
 
-// get log pictures
+// get my posted log pictures
 $allpics = isset($_REQUEST['allpics']) && $_REQUEST['allpics'];
 $all_pictures = get_logpics(LOGPICS_FOR_MYHOME_GALLERY);
 if ($allpics) {
@@ -118,6 +118,17 @@ if ($allpics) {
 }
 $tpl->assign('allpics', $allpics ? 1 : 0);
 $tpl->assign('total_pictures', count($all_pictures));
+
+// get received log pictures
+$all_rec_pics = isset($_REQUEST['allrecpics']) && $_REQUEST['allrecpics'];
+$all_rec_pictures = get_logpics(LOGPICS_RECEIVED_FOR_MYHOME_GALLERY);
+if ($all_rec_pics) {
+    set_paged_pics(LOGPICS_RECEIVED_FOR_MYHOME_GALLERY, 0, 0, "myhome.php?allrecpics=1");
+} else {
+    $tpl->assign('rec_pictures', $all_rec_pictures);
+}
+$tpl->assign('all_rec_pics', $all_rec_pics ? 1 : 0);
+$tpl->assign('total_rec_pictures', count($all_rec_pictures));
 
 // display
 $tpl->display();

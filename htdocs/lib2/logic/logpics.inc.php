@@ -19,6 +19,7 @@ define('LOGPICS_FOR_USER_GALLERY', 4);  // params: userid
 define('LOGPICS_FOR_MYHOME_GALLERY', 5);
 define('LOGPICS_FOR_CACHE_STAT', 6);  // params: cacheid
 define('LOGPICS_FOR_CACHE_GALLERY', 7);  // params: userid, cacheid
+define('LOGPICS_RECEIVED_FOR_MYHOME_GALLERY', 8);
 
 
 function get_logpics($purpose, $userid = 0, $cacheid = 0)
@@ -35,6 +36,7 @@ function get_logpics($purpose, $userid = 0, $cacheid = 0)
     $join_cachestatus =
         "INNER JOIN `cache_status` ON `caches`.`status`=`cache_status`.`id` AND `allow_user_view`=1";
     $join_user = "INNER JOIN `user` ON `user`.`user_id`=`logs`.`user_id`";
+
 
     $rs = false;
 
@@ -142,6 +144,22 @@ function get_logpics($purpose, $userid = 0, $cacheid = 0)
 
             break;
 
+        case LOGPICS_RECEIVED_FOR_MYHOME_GALLERY:
+            // all picture one user received one his/her caches via logs, with the only exception of zombie pix hanging
+            // by an old log deletion (we should remove those ...)
+
+            $rs = sql(
+                "SELECT $fields, `logs`.`date` AS `picdate`, `user`.`username`, `caches`.`name`
+                       FROM `pictures` AS `pics`
+                     $join_logs
+                     $join_caches
+                     $join_user
+                    WHERE `object_type`=1 AND `caches`.`user_id`='&1'
+                 ORDER BY `logs`.`order_date` DESC",
+                $login->userid
+            );
+            break;
+
         case LOGPICS_FOR_CACHE_STAT:
             // all pictures for a cache except license-replacement pics
             // need not to exclude invisible caches, as this is only displayed in listing view
@@ -207,6 +225,7 @@ function set_paged_pics($purpose, $userid, $cacheid, $url)
 
     $pictures = get_logpics($purpose, $userid, $cacheid);
     $tpl->assign('pictures', array_slice($pictures, $startat, MAX_PICTURES_PER_GALLERY_PAGE));
+    $tpl->assign('rec_pictures', array_slice($pictures, $startat, MAX_PICTURES_PER_GALLERY_PAGE));
 
     $pager = new pager($url . "&startat={offset}");
     $pager->make_from_offset($startat, count($pictures), MAX_PICTURES_PER_GALLERY_PAGE);
