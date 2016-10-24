@@ -5,6 +5,7 @@
 ***************************************************************************}
 
 <script type="text/javascript" src="resource2/ocstyle/js/wz_tooltip.js"></script>
+<script type="text/javascript" src="resource2/ocstyle/js/coordinateInput.js"></script>
 <script type="text/javascript">
 <!--
 var mnAttributesShowCat2 = 1;
@@ -48,6 +49,7 @@ function showAllSearchOpt()
     }
     showHideAllButton();
 }
+
 
 function hideAllSearchOpt()
 {
@@ -199,17 +201,25 @@ function _sbd_click(submitType)
         }
     }
 
-    if (isNaN(document.searchbydistance.lon_h.value) || isNaN(document.searchbydistance.lon_min.value) || document.searchbydistance.lon_h.value == "" || document.searchbydistance.lon_min.value == "") {
+    try {
+        getSearchCoordinates(submitType);
+    }
+    catch (err) {
+        alert(err);
+        resetbutton('submit_dist');
+        return false;
+    }
+    /*
+    if (isNaN(document.searchbydistance.lon_deg.value) || isNaN(document.searchbydistance.lon_min.value) || document.searchbydistance.lon_deg.value == "" || document.searchbydistance.lon_min.value == "") {
         alert("{/literal}{t}Longitude must be a number!\nFormat: hh° mm.mmm{/t}{literal}");
         resetbutton('submit_dist');
         return false;
     }
-    if (isNaN(document.searchbydistance.lat_h.value) || isNaN(document.searchbydistance.lat_min.value) || document.searchbydistance.lat_h.value == "" || document.searchbydistance.lat_min.value == "") {
+    if (isNaN(document.searchbydistance.lat_deg.value) || isNaN(document.searchbydistance.lat_min.value) || document.searchbydistance.lat_deg.value == "" || document.searchbydistance.lat_min.value == "") {
         alert("{/literal}{t}Latitude must be a number!\nFormat: hh° mm.mmm{/t}{literal}");
         resetbutton('submit_dist');
         return false;
-    }
-
+    }*/
     return true;
 }
 
@@ -698,7 +708,7 @@ function switchAttributeCat2()
 
         <tr class="search_bydistance">
             <td class="formlabel">{t}Perimeter:{/t}</td>
-            <td>
+            <td colspan="2">
                 <input type="text" tabindex="1" name="distance" value="{$distance}" maxlength="4" class="input50" />&nbsp;
                 <select tabindex="2" name="unit" class="input100">
                     <option value="km" {if $sel_km}selected="selected"{/if}>{t}Kilometer{/t}</option>
@@ -710,7 +720,7 @@ function switchAttributeCat2()
         <tr class="search_bydistance">
             {* exchanged tab order for radio button and input; see http://redmine.opencaching.de/issues/239 *}
             <td class=""><input type="radio" tabindex="4" id="sbortplz" name="searchto" value="searchbyortplz" {if $dfromortplz_checked}checked="checked"{/if}><label for="sbortplz">... {t}from city or postal code:{/t}</label></td>
-            <td><input type="text" tabindex="3" name="ortplz" value="{$ortplz}" class="input200" onfocus="bydistance_set_radiobutton(0)"/> &nbsp;</td>
+            <td colspan="2"><input type="text" tabindex="3" name="ortplz" value="{$ortplz}" class="input200" onfocus="bydistance_set_radiobutton(0)"/> &nbsp;</td>
             <td></td>  {* creates empty fourth column which is used by text search options *}
         </tr>
         <tr class="search_bydistance">
@@ -720,23 +730,15 @@ function switchAttributeCat2()
             &nbsp;({t}waypoint{/t})</td>
         </tr>
         <tr class="search_bydistance">
-            <td valign="top"><input type="radio" tabindex="6" id="sbcoords" name="searchto" value="searchbycoords" {if $dfromcoords_checked}checked="checked"{/if}><label for="sbcoords">... {t}from coordinates:{/t}</label></td>
             <td valign="top">
-                <select tabindex="7" name="latNS" onfocus="bydistance_set_radiobutton(2)">
-                    <option value="N" {if $latN_sel}selected="selected"{/if}>{t}N{/t}</option>
-                    <option value="S" {if $latS_sel}selected="selected"{/if}>{t}S{/t}</option>
-                </select>&nbsp;
-                <input type="text" tabindex="8" name="lat_h" maxlength="2" value="{$lat_h}" class="input30" onfocus="bydistance_set_radiobutton(2)"/>&nbsp;°&nbsp;
-                <input type="text" tabindex="9" name="lat_min" maxlength="6" value="{$lat_min}" class="input50" onfocus="bydistance_set_radiobutton(2)"/>&nbsp;'&nbsp;
-                <br />
-                <select tabindex="10" name="lonEW" onfocus="bydistance_set_radiobutton(2)">
-                    <option value="E" {if $lonE_sel}selected="selected"{/if}>{t}E{/t}</option>
-                    <option value="W" {if $lonW_sel}selected="selected"{/if}>{t}W{/t}</option>
-                </select>&nbsp;
-                <input type="text" tabindex="11" name="lon_h" maxlength="3" value="{$lon_h}" class="input30" onfocus="bydistance_set_radiobutton(2)"/>&nbsp;°&nbsp;
-                <input type="text" tabindex="12" name="lon_min" maxlength="6" value="{$lon_min}" class="input50" onfocus="bydistance_set_radiobutton(2)"/>&nbsp;'&nbsp;
+                <input type="radio" tabindex="6" id="sbcoords" name="searchto" value="searchbycoords" {if $dfromcoords_checked}checked="checked"{/if}><label for="sbcoords">... {t}from coordinates:{/t}</label>
             </td>
-            <td><input type="submit" tabindex="13" name="submit_dist" value="{t}Search{/t}" class="formbutton" onclick="submitbutton('submit_dist')" /></td>
+            <td>
+                {include file="coordinate_input.tpl"}
+            </td>
+            <td>
+                <input type="submit" tabindex="13" name="submit_dist" value="{t}Search{/t}" class="formbutton" onclick="submitbutton('submit_dist');" />
+            </td>
         </tr>
     </form>
 
