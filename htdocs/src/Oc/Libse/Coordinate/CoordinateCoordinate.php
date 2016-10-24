@@ -23,6 +23,12 @@ class CoordinateCoordinate
         $this->longitude = $longitude;
     }
 
+    public static function fromLatLon($latitude, $longitude) {
+        
+        return new CoordinateCoordinate($latitude, $longitude);
+    
+    }
+    
     public static function fromHemDegMin($latHem, $latDeg, $latMin, $lonHem, $lonDeg, $lonMin)
     {
         $latitude = self::hemDegMinToFloat($latHem, $latDeg, $latMin);

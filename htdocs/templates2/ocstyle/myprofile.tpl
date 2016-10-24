@@ -93,7 +93,8 @@
                 <td valign=top>{t}Home coordinates:{/t}</td>
                 <td>
                     {if $edit==true}
-                        {coordinput prefix="coord" lat=$coordsDecimal.lat lon=$coordsDecimal.lon}
+                        {include file='coordinate_input.tpl'}
+                        <!-- {coordinput prefix="coord" lat=$coordsDecimal.lat lon=$coordsDecimal.lon} -->
                     {else}
                         {$coords.lat|escape} {$coords.lon|escape}
                     {/if}
@@ -223,7 +224,7 @@
                         <input type="submit" name="change" value="{t}Change{/t}" class="formbutton" onclick="flashbutton('change')" />
                     {else}
                         <input type="submit" name="cancel" value="{t}Cancel{/t}" class="formbutton" onclick="flashbutton('cancel')" />&nbsp;&nbsp;
-                        <input type="submit" name="save" value="{t}Submit{/t}" class="formbutton" onclick="submitbutton('save')" />
+                        <input type="submit" name="save" value="{t}Submit{/t}" class="formbutton" onclick="getSearchCoordinates('save')" />
                     {/if}
                 </td>
             </tr>

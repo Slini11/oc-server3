@@ -10,14 +10,14 @@
         <textarea name="note" rows="4" cols="60" >{$note}</textarea>
       </td>
       <td>
-        <input type="checkbox" class="checkbox" name="incl_coord" value="true" {if $inclCoord}checked="checked"{/if}/> {t}Include a coordinate in the note{/t}<br />
+        <input type="checkbox" class="checkbox" name="incl_coord" id="incl_coord" value="true" {if $inclCoord}checked="checked"{/if}/> <label for="incl_coord">{t}Include a coordinate in the note{/t}</label><br />
         {include file='coordinate_input.tpl'}
       </td>
     </tr>
     <tr>
       <td></td>
       <td colspan="2">
-        <input type="submit" name="submit_cache_note" value="{t}Save{/t}" class="formbutton" onclick="submitbutton('submit_cache_note')" />
+        <input type="submit" name="submit_cache_note" value="{t}Save{/t}" class="formbutton" onclick="getSearchCoordinates('submit_cache_note')" />
       </td>
     </tr>
     <tr>

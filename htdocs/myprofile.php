@@ -4,6 +4,10 @@
  *
  ***************************************************************************/
 
+use Oc\Libse\UserCoordinates\PresenterUserCoordinates;
+use Oc\Libse\Http\RequestHttp;
+use Oc\Libse\Language\TranslatorLanguage;
+
 require __DIR__ . '/lib2/web.inc.php';
 
 $tpl->name = 'myprofile';
@@ -99,6 +103,22 @@ function change()
     $tpl->assign('oconly_helpstart', $oconly_helplink);
     $tpl->assign('oconly_helpend', $oconly_helplink != '' ? '</a>' : '');
 
+    if ($login->userid != 0) {
+        $userCoordinatesPresenter = new PresenterUserCoordinates(new RequestHttp(), new TranslatorLanguage());
+        $userCoordinatesPresenter->init($user);
+
+        if (isset($_POST['save']) && $userCoordinatesPresenter->validate()) {
+            $userCoordinatesPresenter->doSubmit($user);
+        }
+
+        try {
+            $userCoordinatesPresenter->prepare($tpl);
+        }
+        catch (Exception $e) {
+            $bError = true;
+        }
+    }
+    /*
     $coord['lat'] = coordinate::parseRequestLat('coord');
     $coord['lon'] = coordinate::parseRequestLon('coord');
     if (($coord['lat'] !== false) && ($coord['lon'] !== false)) {
@@ -112,6 +132,7 @@ function change()
             $bError = true;
         }
     }
+    */
 
     $bAccMailing = isset($_REQUEST['save']) ? isset($_REQUEST['accMailing']) : $user->getAccMailing();
     $tpl->assign('accMailing', $bAccMailing);

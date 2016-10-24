@@ -389,7 +389,7 @@ function showalllists()
     </div>
 
     <div class="content2-container">
-        <form action="viewcache.php" method="post" name="cache_note">
+        <form action="viewcache.php?cacheid={$cache.cacheid}" method="post" name="cache_note">
             {include file='cache_note.tpl'}
         </form>
     </div>

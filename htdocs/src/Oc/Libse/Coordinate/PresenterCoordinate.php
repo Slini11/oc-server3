@@ -11,9 +11,12 @@ use Oc\Libse\Language\TranslatorLanguage;
 use Oc\Libse\Validator\IntegerValidator;
 use Oc\Libse\Validator\RealValidator;
 use Oc\Libse\Validator\RegexValidator;
+use \Exception;
 
 class PresenterCoordinate
 {
+    const lon = 'lon';
+    const lat = 'lat';
     const lat_hem = 'lat_hem';
     const lat_deg = 'lat_deg';
     const lat_min = 'lat_min';
@@ -56,6 +59,16 @@ class PresenterCoordinate
         }
 
         return new TranslatorLanguage();
+    }
+
+    private function getLatitude()
+    {
+        return $this->request->get(self::lat, $this->coordinate->latitude());
+    }
+
+    private function getLongitude()
+    {
+        return $this->request->get(self::lon, $this->coordinate->longitude());
     }
 
     private function getLatHem()
@@ -112,11 +125,18 @@ class PresenterCoordinate
 
         if (!$this->valid) {
             $template->assign(self::coord_error, $this->translator->translate('Invalid coordinate'));
+            $template->assign('longitudeError', true);
+            throw new Exception("Error");
         }
     }
 
     public function getCoordinate()
     {
+        return CoordinateCoordinate::fromLatLon (
+            $this->getLatitude(),
+            $this->getLongitude()
+        );
+        /*
         return CoordinateCoordinate::fromHemDegMin(
             $this->getLatHem(),
             $this->getLatDeg(),
@@ -125,6 +145,7 @@ class PresenterCoordinate
             $this->getLonDeg(),
             $this->getLonMin()
         );
+        */
     }
 
     public function hasCoordinate()
@@ -153,6 +174,11 @@ class PresenterCoordinate
     private function getValidators()
     {
         return [
+           self::lat => new RealValidator(-90, 90, '{1,2}', '{0,6}'),
+           self::lon => new RealValidator(-180, 180, '{1,3}', '{0,6}'),
+        ];
+        /*
+        return [
             self::lat_hem => new RegexValidator('[NS]$'),
             self::lat_deg => new IntegerValidator(0, 90),
             self::lat_min => new RealValidator(0, 59.999, '{1,2}', '{1,3}'),
@@ -160,5 +186,6 @@ class PresenterCoordinate
             self::lon_deg => new IntegerValidator(0, 180),
             self::lon_min => new RealValidator(0, 59.999, '{1,2}', '{1,3}')
         ];
+        */
     }
 }

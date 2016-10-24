@@ -380,11 +380,11 @@ if ($queryid != 0) {
             $options['lat'] = $_REQUEST['lat'] + 0;
             $options['lon'] = $_REQUEST['lon'] + 0;
         } else {
-            $options['latNS'] = isset($_REQUEST['latNS']) ? $_REQUEST['latNS'] : 'N';
-            $options['lonEW'] = isset($_REQUEST['lonEW']) ? $_REQUEST['lonEW'] : 'E';
+            $options['lat_hem'] = isset($_REQUEST['lat_hem']) ? $_REQUEST['lat_hem'] : 'N';
+            $options['lon_hem'] = isset($_REQUEST['lon_hem']) ? $_REQUEST['lon_hem'] : 'E';
 
-            $options['lat_h'] = isset($_REQUEST['lat_h']) ? $_REQUEST['lat_h'] : 0;
-            $options['lon_h'] = isset($_REQUEST['lon_h']) ? $_REQUEST['lon_h'] : 0;
+            $options['lat_deg'] = isset($_REQUEST['lat_deg']) ? $_REQUEST['lat_deg'] : 0;
+            $options['lon_deg'] = isset($_REQUEST['lon_deg']) ? $_REQUEST['lon_deg'] : 0;
             $options['lat_min'] = isset($_REQUEST['lat_min']) ? $_REQUEST['lat_min'] : 0;
             $options['lon_min'] = isset($_REQUEST['lon_min']) ? $_REQUEST['lon_min'] : 0;
         }
@@ -886,7 +886,7 @@ if ($options['showresult'] == 1) {
                 );
             }
             $r = sql_fetch_array($rs);
-            
+
             if ($r) {
                 $lat = $r['latitude'];
                 $lon = $r['longitude'];
@@ -910,37 +910,29 @@ if ($options['showresult'] == 1) {
                 $lat = $options['lat'] + 0;
                 $lon = $options['lon'] + 0;
             } else {
-                $latNS = $options['latNS'];
-                $lonEW = $options['lonEW'];
+                $lat_hem = $options['lat_hem'];
+                $lon_hem = $options['lon_hem'];
 
-                $lon_h = $options['lon_h'];
-                $lat_h = $options['lat_h'];
+                $lon_deg = $options['lon_deg'];
+                $lat_deg = $options['lat_deg'];
                 $lon_min = $options['lon_min'];
                 $lat_min = $options['lat_min'];
 
-                if (is_numeric($lon_h)
-                    && is_numeric($lon_min)
-                    && ($lon_h >= 0)
-                    && ($lon_h < 180)
-                    && ($lon_min >= 0)
-                    && ($lon_min < 60)
-                ) {
-                    $lon = $lon_h + $lon_min / 60;
-                    if ($lonEW == 'W') {
-                        $lon = -$lon;
+                if (is_numeric($lon_deg) && is_numeric($lon_min)) {
+                    if (($lon_deg >= 0) && ($lon_deg < 180) && ($lon_min >= 0) && ($lon_min < 60)) {
+                        $lon = $lon_deg + $lon_min / 60;
+                        if ($lon_hem == 'W') {
+                            $lon = - $lon;
+                        }
                     }
                 }
 
-                if (is_numeric($lat_h)
-                    && is_numeric($lat_min)
-                    && ($lat_h >= 0)
-                    && ($lat_h < 90)
-                    && ($lat_min >= 0)
-                    && ($lat_min < 60)
-                ) {
-                    $lat = $lat_h + $lat_min / 60;
-                    if ($latNS == 'S') {
-                        $lat = - $lat;
+                if (is_numeric($lat_deg) && is_numeric($lat_min)) {
+                    if (($lat_deg >= 0) && ($lat_deg < 90) && ($lat_min >= 0) && ($lat_min < 60)) {
+                        $lat = $lat_deg + $lat_min / 60;
+                        if ($lat_hem == 'S') {
+                            $lat = - $lat;
+                        }
                     }
                 }
             }
@@ -962,6 +954,7 @@ if ($options['showresult'] == 1) {
             if ($options['finderid'] != 0) {
                 $finder_id = $options['finderid'];
             } else {
+                //get the userid
                 $rs = sql_slave(
                     "SELECT `user_id` FROM `user` WHERE `username`='&1'",
                     $options['finder']
@@ -1780,7 +1773,7 @@ function outputSearchForm($options)
     );
 
     // ... from coords
-    if (!isset($options['lat_h'])) {
+    if (!isset($options['lat_deg'])) {
         if ($login->logged_in()) {
             $rs = sql(
                 "SELECT `latitude`, `longitude`
@@ -1792,67 +1785,70 @@ function outputSearchForm($options)
             $lat = $record['latitude'];
             sql_free_result($rs);
 
-            $tpl->assign('lonE_sel', $lon >= 0);
-            $tpl->assign('lonW_sel', $lon < 0);
-            $tpl->assign('latN_sel', $lat >= 0);
-            $tpl->assign('latS_sel', $lat < 0);
+            if ($lon < 0) {
+                $tpl->assign('lon_hem', 'W');
+            } else {
+                $tpl->assign('lon_hem', 'E');
+            }
 
-            $lon_h = floor($lon);
-            $lat_h = floor($lat);
+            if ($lat < 0) {
+                $tpl->assign('lat_hem', 'S');
+            } else {
+                $tpl->assign('lat_hem', 'N');
+            }
 
-            $lon_min = ($lon - $lon_h) * 60;
-            $lat_min = ($lat - $lat_h) * 60;
+            $lon_deg = floor($lon);
+            $lat_deg = floor($lat);
 
-            if ($lat < 0 && $lat_h < 0) {
+            $lon_min = ($lon - $lon_deg) * 60;
+            $lat_min = ($lat - $lat_deg) * 60;
+
+            if ($lat < 0 && $lat_deg < 0) {
                 $lat_min = 60 - $lat_min;
             }
-            if ($lon < 0 && $lon_h < 0) {
+            if ($lon < 0 && $lon_deg < 0) {
                 $lon_min = 60 - $lon_min;
             }
 
-            $tpl->assign('lat_min', sprintf('%02.3f', $lat_min));
-            $tpl->assign('lon_min', sprintf('%02.3f', $lon_min));
+            $tpl->assign('lat_min', sprintf("%02.3f", $lat_min));
+            $tpl->assign('lon_min', sprintf("%02.3f", $lon_min));
 
-            if ($lat < 0 && $lat_h < 0) {
-                $lat_h = - $lat_h;
+            if ($lat < 0 && $lat_deg < 0) {
+                $lat_deg = - $lat_deg;
                 if ($lat_min != 0) {
-                    $lat_h = $lat_h - 1;
+                    $lat_deg = $lat_deg - 1;
                 }
             }
-            if ($lon < 0 && $lon_h < 0) {
-                $lon_h = - $lon_h;
+            if ($lon < 0 && $lon_deg < 0) {
+                $lon_deg = - $lon_deg;
                 if ($lon_min != 0) {
-                    $lon_h = $lon_h - 1;
+                    $lon_deg = $lon_deg - 1;
                 }
             }
-            $tpl->assign('lat_h', $lat_h);
-            $tpl->assign('lon_h', $lon_h);
+            $tpl->assign('lat_deg', $lat_deg);
+            $tpl->assign('lon_deg', $lon_deg);
         } else {
-            $tpl->assign('lat_h', '00');
-            $tpl->assign('lon_h', '000');
+            $tpl->assign('lat_deg', '00');
+            $tpl->assign('lon_deg', '000');
             $tpl->assign('lat_min', '00.000');
             $tpl->assign('lon_min', '00.000');
         }
     } else {
-        $tpl->assign('lat_h', isset($options['lat_h']) ? $options['lat_h'] : '00');
-        $tpl->assign('lon_h', isset($options['lon_h']) ? $options['lon_h'] : '000');
+        $tpl->assign('lat_deg', isset($options['lat_deg']) ? $options['lat_deg'] : '00');
+        $tpl->assign('lon_deg', isset($options['lon_deg']) ? $options['lon_deg'] : '000');
         $tpl->assign('lat_min', isset($options['lat_min']) ? $options['lat_min'] : '00.000');
         $tpl->assign('lon_min', isset($options['lon_min']) ? $options['lon_min'] : '00.000');
 
-        if ($options['lonEW'] == 'W') {
-            $tpl->assign('lonE_sel', '');
-            $tpl->assign('lonW_sel', 'selected="selected"');
+        if ($options['lon_hem'] == 'W') {
+            $tpl->assign('lon_hem', 'W');
         } else {
-            $tpl->assign('lonE_sel', 'selected="selected"');
-            $tpl->assign('lonW_sel', '');
+            $tpl->assign('lon_hem', 'E');
         }
 
-        if ($options['latNS'] == 'S') {
-            $tpl->assign('latS_sel', 'selected="selected"');
-            $tpl->assign('latN_sel', '');
+        if ($options['lat_hem'] == 'S') {
+            $tpl->assign('lat_hem', 'S');
         } else {
-            $tpl->assign('latS_sel', '');
-            $tpl->assign('latN_sel', 'selected="selected"');
+            $tpl->assign('lat_hem', 'N');
         }
     }
 
@@ -1869,7 +1865,8 @@ function outputSearchForm($options)
     $tpl->assign('searchtype_byortplz', in_array($options['searchtype'], ['byplz', 'byort']));
     $tpl->assign('searchtype_bywaypoint', $options['searchtype'] == 'bywaypoint');
     $tpl->assign('searchtype_bycoords', $options['searchtype'] == 'bycoords');
-    
+
+    $tpl->assign('check_search', true);
     // owner
     $tpl->assign('owner', isset($options['owner']) ? htmlspecialchars($options['owner'], ENT_COMPAT, 'UTF-8') : '');
     $tpl->assign('searchtype_byowner', $options['searchtype'] == 'byowner');
@@ -1954,9 +1951,11 @@ function outputSearchForm($options)
     $tpl->assign('terrainmax', $options['terrainmax']);
     $tpl->assign('terrain_options', [0, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
-    $logtypes = [];
+    // logtypen
     if (isset($options['logtype'])) {
         $logtypes = explode(',', $options['logtype']);
+    } else {
+        $logtypes = [];
     }
 
     $rs = sql(

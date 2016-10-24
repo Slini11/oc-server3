@@ -10,7 +10,7 @@ use Oc\Libse\Coordinate\CoordinateCoordinate;
 use Oc\Libse\Coordinate\PresenterCoordinate;
 use Oc\Libse\Validator\AlwaysValidValidator;
 
-class PresenterCacheNote
+class PresenterCacheNote extends \Exception
 {
     const req_note = 'note';
     const req_incl_coord = 'incl_coord';
@@ -57,7 +57,11 @@ class PresenterCacheNote
         $template->assign(self::tpl_cache_id, $this->cacheId);
         $template->assign(self::tpl_note, $this->getNote());
         $template->assign(self::tpl_incl_coord, $this->coordinate->hasCoordinate());
-        $this->coordinate->prepare($template);
+        try {
+            $this->coordinate->prepare($template);
+        }
+        catch (\Exception $e) {
+        }
     }
 
     public function validate()
