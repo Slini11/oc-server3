@@ -11,8 +11,14 @@
     <div class="container">
         {% include '/index/navigation.html.twig' %}
     </div>
-
         {% block body %}
+            {% if is_granted('ROLE_ADMIN') %}
+                <a href="{{ path('backend_index_index') }}">BACKEND</a>
+            {% endif %}
+
+        {% endblock %}
+
+        {% block page_content %}
 
             <div>
                <a href="http://try.docker.team-opencaching.de/login">Login</a>
@@ -23,8 +29,10 @@
             {% endif %}
 
         {% endblock %}
+
         {% block javascripts %}
             {{ encore_entry_script_tags('backend') }}
         {% endblock %}
+
     </body>
 </html>

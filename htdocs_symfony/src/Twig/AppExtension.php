@@ -33,6 +33,7 @@ class AppExtension extends AbstractExtension
     : array
     {
         return [
+            new TwigFilter('ocFilterDuration', [$this, 'ocFilterDuration']),
             new TwigFilter('ocFilterDifficulty', [$this, 'ocFilterDifficulty']),
             new TwigFilter('ocFilterTerrain', [$this, 'ocFilterTerrain']),
             new TwigFilter('rot13', [$this, 'ocFilterROT13']),
@@ -50,6 +51,19 @@ class AppExtension extends AbstractExtension
             new TwigFunction('ocFilterCoordinatesDegMin', [$this, 'ocFilterCoordinatesDegMin']),
             new TwigFunction('ocFilterCoordinatesDegMinSec', [$this, 'ocFilterCoordinatesDegMinSec']),
         ];
+    }
+
+    /**
+     *
+     * convert a float value into a time string, like hh:mm
+     *
+     * @param float $number
+     *
+     * @return string
+     */
+    public function ocFilterDuration(float $number)
+    : string {
+        return floor($number) . ':' . sprintf("%'.02d", round(60 * ($number - floor($number)), PHP_ROUND_HALF_UP));
     }
 
     /**
@@ -142,5 +156,17 @@ class AppExtension extends AbstractExtension
         $result = $this->coordinatesRepository->getDegreeMinutesSeconds();
 
         return $result['lat'] . ' ' . $result['lon'];
+    }
+
+    /**
+     * calculate and format difficulty value
+     *
+     * @param $number
+     *
+     * @return string
+     */
+    public function ocListingFoundCount($number)
+    : string {
+        return 'D' . $this->convertDifficultyTerrainRating($number);
     }
 }

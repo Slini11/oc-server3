@@ -132,6 +132,27 @@ class GeoCachesEntity extends AbstractEntity
     /** @var GeoCacheTypeEntity */
     public $cacheType;
 
+    /** @var GeoCacheRatingEntity */
+
+    public $cacheRating;
+
+    /** @var GeoCacheIgnoreEntity */
+
+    public $cacheIgnore;
+
+    /** @var GeoCacheWatchesEntity */
+
+    public $cacheWatches;
+
+    /** @var GeoCacheVisitsEntity */
+
+    public $cacheVisits;
+
+    /** @var LogTypesEntity */
+
+    public $logTypes;
+
+
     /**
      * @return bool
      */

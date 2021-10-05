@@ -43,6 +43,36 @@ class CachesRepository
     private $userRepository;
 
     /**
+     * @var CacheRatingRepository
+     */
+    private $cacheRatingRepository;
+
+    /**
+     * @var CacheIgnoreRepository
+     */
+    private $cacheIgnoreRepository;
+
+    /**
+     * @var CacheWatchesRepository
+     */
+    private $cacheWatchesRepository;
+
+    /**
+     * @var CacheVisitsRepository
+     */
+    private $cacheVisitsRepository;
+
+    /**
+     * @var CacheLogsRepository
+     */
+    private $cacheLogsRepository;
+
+    /**
+     * @var PicturesRepository
+     */
+    private $picturesRepository;
+
+    /**
      * CachesRepository constructor.
      *
      * @param Connection $connection
@@ -50,19 +80,37 @@ class CachesRepository
      * @param CacheSizeRepository $cacheSizeRepository
      * @param CacheStatusRepository $cacheStatusRepository
      * @param CacheTypeRepository $cacheTypeRepository
+     * @param CacheRatingRepository $cacheRatingRepository
+     * @param CacheIgnoreRepository $cacheIgnoreRepository
+     * @param CacheWatchesRepository $cacheWatchesRepository
+     * @param CacheVisitsRepository $cacheVisitsRepository
+     * @param CacheLogsRepository $cacheLogsRepository
+     * @param PicturesRepository $picturesRepository
      */
     public function __construct(
         Connection $connection,
         UserRepository $userRepository,
         CacheSizeRepository $cacheSizeRepository,
         CacheStatusRepository $cacheStatusRepository,
-        CacheTypeRepository $cacheTypeRepository
+        CacheTypeRepository $cacheTypeRepository,
+        CacheRatingRepository $cacheRatingRepository,
+        CacheIgnoreRepository $cacheIgnoreRepository,
+        CacheWatchesRepository $cacheWatchesRepository,
+        CacheVisitsRepository $cacheVisitsRepository,
+        CacheLogsRepository $cacheLogsRepository,
+        PicturesRepository $picturesRepository
     ) {
         $this->connection = $connection;
         $this->userRepository = $userRepository;
         $this->cacheSizeRepository = $cacheSizeRepository;
         $this->cacheStatusRepository = $cacheStatusRepository;
         $this->cacheTypeRepository = $cacheTypeRepository;
+        $this->cacheRatingRepository = $cacheRatingRepository;
+        $this->cacheIgnoreRepository = $cacheIgnoreRepository;
+        $this->cacheWatchesRepository = $cacheWatchesRepository;
+        $this->cacheVisitsRepository = $cacheVisitsRepository;
+        $this->cacheLogsRepository = $cacheLogsRepository;
+        $this->picturesRepository = $picturesRepository;
     }
 
     /**
@@ -300,6 +348,13 @@ class CachesRepository
             'cache_status' => $entity->cacheStatus,
             'cache_type' => $entity->cacheType,
             'user' => $entity->user,
+            'rating_count' => $entity->ratingCount,
+            'ignore_count' => $entity->ignoreCount,
+            'watches_count' => $entity->watchesCount,
+            'visits_count' => $entity->visitsCount,
+            'cache_logs' => $entity->cacheLogs,
+            'logs_count' => $entity->logsCount,
+            'picture_count' => $entity->pictureCount,
         ];
     }
 
@@ -354,6 +409,14 @@ class CachesRepository
         $entity->cacheStatus = $this->cacheStatusRepository->fetchOneBy(['id' => $entity->status]);
         $entity->cacheType = $this->cacheTypeRepository->fetchOneBy(['id' => $entity->type]);
         $entity->user = $this->userRepository->fetchOneById($entity->userId);
+        $entity->ratingCount = $this->cacheRatingRepository->countRating(['cache_id'=> $entity->cacheId]);
+        $entity->ignoreCount = $this->cacheIgnoreRepository->fetchOneByCount(['cache_id'=> $entity->cacheId]);
+        $entity->watchesCount = $this->cacheWatchesRepository->fetchOneByCount(['cache_id'=> $entity->cacheId]);
+        $entity->visitsCount = $this->cacheVisitsRepository->fetchByCount(['cache_id'=> $entity->cacheId]);
+        $entity->cacheLogs = $this->cacheLogsRepository->fetchBy(['cache_id' => $entity->cacheId]);
+        $entity->logsCount = $this->cacheLogsRepository->countLogs($entity->cacheId);
+        //$entity->picturesCount = $this->picturesRepository->countPictures(['object_id' => $entity->cacheLogs, 'user']);
+        $entity->pictureCount = $this->cacheLogsRepository->getCountPictures(['cache_id' => $entity->cacheId]);
 
         return $entity;
     }
