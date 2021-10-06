@@ -144,7 +144,7 @@ class CacheLogsRepository
         $result = $statement->fetchAll();
 
         if ($statement->rowCount() === 0) {
-            throw new RecordsNotFoundException('No records with given where clause found');
+//            throw new RecordsNotFoundException('No records with given where clause found');
         }
 
         $entities = [];
@@ -186,12 +186,10 @@ class CacheLogsRepository
 
         $result = $statement->fetchAll();
 
-        if ($statement->rowCount() === 0) {
-            throw new RecordsNotFoundException('No records with given where clause found');
-        } else {
+        if ($statement->rowCount() != 0) {
             foreach ($result as $item) {
                 $entities[(int) $item['type']]++;
-            }
+	    }
         }
 
         return $entities;
@@ -219,11 +217,11 @@ class CacheLogsRepository
 
         $result = $statement->fetch();
 
-        if ($statement->rowCount() === 0) {
-            throw new RecordNotFoundException('Record with given where clause not found');
-        }
-
-        return $result['SUM(picture)'];
+	if (count($result) === 0) {
+            return 0;
+        } else {
+	    return (int) $result['SUM(picture)'];
+	}
     }
 
 
