@@ -3,6 +3,8 @@
 namespace Oc\Repository;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception\InvalidArgumentException;
 use Oc\Entity\GeoCacheIgnoreEntity;
 use Oc\Repository\Exception\RecordAlreadyExistsException;
 use Oc\Repository\Exception\RecordNotFoundException;
@@ -25,7 +27,7 @@ class CacheIgnoreRepository
      * @return array
      * @throws RecordsNotFoundException
      */
-    public function fetchAll()
+    public function fetchAll() : array
     {
         $statement = $this->connection->createQueryBuilder()
             ->select('*')
@@ -49,11 +51,10 @@ class CacheIgnoreRepository
 
     /**
      * @param array $where
-     *
      * @return GeoCacheIgnoreEntity
      * @throws RecordNotFoundException
      */
-    public function fetchOneBy(array $where = [])
+    public function fetchOneBy(array $where = []) : GeoCacheIgnoreEntity
     {
         $queryBuilder = $this->connection->createQueryBuilder()
             ->select('*')
@@ -79,11 +80,9 @@ class CacheIgnoreRepository
 
     /**
      * @param array $where
-     *
-     * @return GeoCacheIgnoreEntity
-     * @throws RecordNotFoundException
+     * @return int
      */
-    public function fetchOneByCount(array $where = [])
+    public function fetchOneByCount(array $where = []) : int
     {
         $queryBuilder = $this->connection->createQueryBuilder()
             ->select('*')
@@ -107,7 +106,7 @@ class CacheIgnoreRepository
      * @return array
      * @throws RecordsNotFoundException
      */
-    public function fetchBy(array $where = [])
+    public function fetchBy(array $where = []) : array
     {
         $queryBuilder = $this->connection->createQueryBuilder()
             ->select('*')
@@ -138,12 +137,11 @@ class CacheIgnoreRepository
 
     /**
      * @param GeoCacheIgnoreEntity $entity
-     *
      * @return GeoCacheIgnoreEntity
      * @throws RecordAlreadyExistsException
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    public function create(GeoCacheIgnoreEntity $entity)
+    public function create(GeoCacheIgnoreEntity $entity) : GeoCacheIgnoreEntity
     {
         if (!$entity->isNew()) {
             throw new RecordAlreadyExistsException('The entity does already exist.');
@@ -156,19 +154,18 @@ class CacheIgnoreRepository
             $databaseArray
         );
 
-        $entity->id = (int)$this->connection->lastInsertId();
+        $entity->cacheId = (int)$this->connection->lastInsertId();
 
         return $entity;
     }
 
     /**
      * @param GeoCacheIgnoreEntity $entity
-     *
      * @return GeoCacheIgnoreEntity
+     * @throws DBALException
      * @throws RecordNotPersistedException
-     * @throws \Doctrine\DBAL\DBALException
      */
-    public function update(GeoCacheIgnoreEntity $entity)
+    public function update(GeoCacheIgnoreEntity $entity) : GeoCacheIgnoreEntity
     {
         if ($entity->isNew()) {
             throw new RecordNotPersistedException('The entity does not exist.');
@@ -179,7 +176,7 @@ class CacheIgnoreRepository
         $this->connection->update(
             self::TABLE,
             $databaseArray,
-            ['id' => $entity->id]
+            ['id' => $entity->cacheId]
         );
 
         return $entity;
@@ -187,13 +184,12 @@ class CacheIgnoreRepository
 
     /**
      * @param GeoCacheIgnoreEntity $entity
-     *
      * @return GeoCacheIgnoreEntity
+     * @throws DBALException
+     * @throws InvalidArgumentException
      * @throws RecordNotPersistedException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\DBAL\Exception\InvalidArgumentException
      */
-    public function remove(GeoCacheIgnoreEntity $entity)
+    public function remove(GeoCacheIgnoreEntity $entity) : GeoCacheIgnoreEntity
     {
         if ($entity->isNew()) {
             throw new RecordNotPersistedException('The entity does not exist.');
@@ -201,20 +197,19 @@ class CacheIgnoreRepository
 
         $this->connection->delete(
             self::TABLE,
-            ['id' => $entity->id]
+            ['id' => $entity->cacheId]
         );
 
-        $entity->id = null;
+        $entity->cacheId = null;
 
         return $entity;
     }
 
     /**
      * @param GeoCacheIgnoreEntity $entity
-     *
      * @return array
      */
-    public function getDatabaseArrayFromEntity(GeoCacheIgnoreEntity $entity)
+    public function getDatabaseArrayFromEntity(GeoCacheIgnoreEntity $entity) : array
     {
         return [
             'cache_id' => $entity->cacheId,
@@ -224,10 +219,9 @@ class CacheIgnoreRepository
 
     /**
      * @param array $data
-     *
      * @return GeoCacheIgnoreEntity
      */
-    public function getEntityFromDatabaseArray(array $data)
+    public function getEntityFromDatabaseArray(array $data) : GeoCacheIgnoreEntity
     {
         $entity = new GeoCacheIgnoreEntity();
         $entity->cacheId = (int)$data['cache_id'];
