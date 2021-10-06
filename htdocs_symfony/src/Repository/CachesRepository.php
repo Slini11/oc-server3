@@ -294,7 +294,8 @@ class CachesRepository
         $result = $statement->fetch();
 
         if ($statement->rowCount() === 0) {
-            throw new RecordNotFoundException('Record with given where clause not found');
+            throw new RecordNotFoundException('Record with given where claus        return $result['SUM(picture)'];
+e not found');
         } else {
             return $result['cache_id'];
         }
