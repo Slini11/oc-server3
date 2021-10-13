@@ -58,13 +58,13 @@ class PicturesEntity extends AbstractEntity
     /** @var int */
     public $mappreview;
 
-    /** @var smallint */
+    /** @var int */
     public $seq;
 
     /**
      * @return bool
      */
-    public function isNew() : bool
+    public function isNew(): bool
     {
         return $this->id === null;
     }
