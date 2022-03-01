@@ -412,7 +412,7 @@ class CachesRepository
         $entity->ratingCount = $this->cacheRatingRepository->countRating(['cache_id'=> $entity->cacheId]);
         $entity->ignoreCount = $this->cacheIgnoreRepository->fetchOneByCount(['cache_id'=> $entity->cacheId]);
         $entity->watchesCount = $this->cacheWatchesRepository->fetchOneByCount(['cache_id'=> $entity->cacheId]);
-        $entity->visitsCount = $this->cacheVisitsRepository->fetchByCount(['cache_id'=> $entity->cacheId]);
+        $entity->visitsCount = $this->cacheVisitsRepository->getCountVisits(['cache_id'=> $entity->cacheId]);
         $entity->cacheLogs = $this->cacheLogsRepository->fetchBy(['cache_id' => $entity->cacheId]);
         $entity->logsCount = $this->cacheLogsRepository->countLogs($entity->cacheId);
         //$entity->picturesCount = $this->picturesRepository->countPictures(['object_id' => $entity->cacheLogs, 'user']);
