@@ -6,11 +6,7 @@ namespace Oc\Controller\Backend;
 
 use Doctrine\DBAL\Connection;
 use Oc\Repository\CachesRepository;
-<<<<<<< HEAD
 use Oc\Repository\Exception\RecordsNotFoundException;
-=======
-use Oc\Repository\Exception\RecordNotFoundException;
->>>>>>> Leaflet
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -46,7 +42,6 @@ class MapsController extends AbstractController
     }
 
     /**
-<<<<<<< HEAD
      * @param string $lat
      * @param string $lon
      * @param bool $centerView
@@ -74,91 +69,18 @@ class MapsController extends AbstractController
         if ($lat != '' && $lon != '') {
             $mapCenterViewLat = $lat;
             $mapCenterViewLon = $lon;
-=======
-     * @param string $wp_oc
-     * @param string $lon
-     * @param string $lat
-     *
-     * @return Response
-     * @throws RecordNotFoundException
-     *
-     * @Route("/mapS/{wp_oc}+{lat}+{lon}", name="map_single")
-     */
-    public function loadMapInfoSingle(string $wp_oc = '', string $lat = '', string $lon = '')
-    : Response {
-        $mapWP = [];
-
-        if (!empty($wp_oc)) {
-            $mapWP = $this->cachesRepository->fetchOneBy(['wp_oc' => $wp_oc]);
-        }
-
-        if ($lat != '' && $lon != '') {
-            $mapCenterViewLat = $lat;
-            $mapCenterViewLon = $lon;
         } else {
             $mapCenterViewLat = '48.3585';
             $mapCenterViewLon = '10.8613';
         }
-        return $this->render(
-            'backend/maps/index.html.twig', ['mapCenterViewLat' => $mapCenterViewLat, 'mapCenterViewLon' => $mapCenterViewLon, 'mapZoom' => '10', 'mapWP' => [$mapWP]]
-        );
-    }
-
-    /**
-     * @param string $wp_oc
-     * @param string $lon
-     * @param string $lat
-     *
-     * @return Response
-     * @throws RecordNotFoundException
-     *
-     * @Route("/mapM", name="map_multiple")
-     */
-    public function loadMapInfoMultiple(string $wp_oc = '', string $lat = '', string $lon = '')
-    : Response {
-        $mapCenterViewLat = '';
-        $mapCenterViewLon = '';
-        $mapWP = [];
-        $mapWP2 = [];
-        $centerPoint = ['lat' => 0, 'lon' => 0, 'count' => 0];
-
-        if (!empty($wp_oc)) {
-            $mapWP = $this->cachesRepository->fetchOneBy(['wp_oc' => $wp_oc]);
-
-
-            $mapWP2 = $this->cachesRepository->fetchOneBy(['wp_oc' => $wp_oc]);
-            //            $mapWP2 = $mapWP;
-            $mapWP2->longitude = '6.904883';
-            $mapWP2->latitude = '51.999';
-            $mapWP2->name = 'Teest';
-        }
-
-        if ($lat != '' && $lon != '') {
-            $mapCenterViewLat = $lat;
-            $mapCenterViewLon = $lon;
-        } elseif ($centerPoint['count'] > 0) {
-            $mapCenterViewLat = $centerPoint['lat'] / $centerPoint['count'];
-            $mapCenterViewLon = $centerPoint['lon'] / $centerPoint['count'];
->>>>>>> Leaflet
-        } else {
-            $mapCenterViewLat = '48.3585';
-            $mapCenterViewLon = '10.8613';
-        }
-<<<<<<< HEAD
 
         return $this->render(
             'backend/maps/index.html.twig', [
-                                              'mapCenterViewLat' => $mapCenterViewLat,
-                                              'mapCenterViewLon' => $mapCenterViewLon,
-                                              'mapZoom' => '6',
-                                              'mapWP' => $mapWP
-                                          ]
-=======
-        //dd([$mapWP, $mapWP2]);
-        //        die();
-        return $this->render(
-            'backend/maps/index.html.twig', ['mapCenterViewLat' => $mapCenterViewLat, 'mapCenterViewLon' => $mapCenterViewLon, 'mapZoom' => '13', 'mapWP' => [$mapWP, $mapWP2]]
->>>>>>> Leaflet
+                'mapCenterViewLat' => $mapCenterViewLat,
+                'mapCenterViewLon' => $mapCenterViewLon,
+                'mapZoom' => '6',
+                'mapWP' => $mapWP
+            ]
         );
     }
 }

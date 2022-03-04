@@ -369,6 +369,8 @@ class CachesRepository
     : GeoCachesEntity {
         $entity = new GeoCachesEntity();
 
+
+
         $entity->cacheId = (int)$data['cache_id'];
         $entity->uuid = (string)$data['uuid'];
         $entity->node = (int)$data['node'];

@@ -122,7 +122,7 @@ class CacheVisitsRepository
     public function getCountVisits(array $where = [])
     : int {
         $queryBuilder = $this->connection->createQueryBuilder()
-            ->select('SUM(count)')
+            ->select('COALESCE(SUM(count), 0)')
             ->from(self::TABLE);
 
         if (count($where) > 0) {
@@ -139,7 +139,7 @@ class CacheVisitsRepository
             throw new RecordNotFoundException('Record with given where clause not found');
         }
 
-        return $result['SUM(count)'];
+        return $result['COALESCE(SUM(count), 0)'];
     }
 
     /**

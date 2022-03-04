@@ -143,10 +143,6 @@ class CacheLogsRepository
 
         $result = $statement->fetchAll();
 
-        if ($statement->rowCount() === 0) {
-            throw new RecordsNotFoundException('No records with given where clause found');
-        }
-
         $entities = [];
 
         foreach ($result as $item) {
@@ -186,9 +182,7 @@ class CacheLogsRepository
 
         $result = $statement->fetchAll();
 
-        if ($statement->rowCount() === 0) {
-            throw new RecordsNotFoundException('No records with given where clause found');
-        } else {
+        if ($statement->rowCount() >= 1) {
             foreach ($result as $item) {
                 $entities[(int) $item['type']]++;
             }
@@ -206,7 +200,7 @@ class CacheLogsRepository
     public function getCountPictures(array $where = [])
     : int {
         $queryBuilder = $this->connection->createQueryBuilder()
-            ->select('SUM(picture)')
+            ->select('COALESCE(SUM(picture),0)')
             ->from(self::TABLE);
 
         if (count($where) > 0) {
@@ -219,11 +213,7 @@ class CacheLogsRepository
 
         $result = $statement->fetch();
 
-        if ($statement->rowCount() === 0) {
-            throw new RecordNotFoundException('Record with given where clause not found');
-        }
-
-        return $result['SUM(picture)'];
+        return $result['COALESCE(SUM(picture),0)'];
     }
 
 
