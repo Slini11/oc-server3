@@ -67,13 +67,28 @@ class GeoCacheLogsEntity extends AbstractEntity
     /** @var int */
     public $ownerNotified;
 
-    /** @var smallint */
+    /** @var int */
     public $picture;
+
+    /** @var bool */
+    public $gdprDeletion;
+
+    /** @var LogTypesEntity */
+    public $logType;
+
+    /** @var UserEntity */
+    public $user;
+
+    /** @var array */
+    public $pictures;
+
+    /** @var bool */
+    public $ratingCacheLog;
 
     /**
      * @return bool
      */
-    public function isNew() : bool
+    public function isNew(): bool
     {
         return $this->id === null;
     }

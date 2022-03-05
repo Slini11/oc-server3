@@ -4,6 +4,8 @@ namespace Oc\Repository;
 
 use DateTime;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception\InvalidArgumentException;
 use Oc\Entity\GeoCacheLogsEntity;
 use Oc\Repository\Exception\RecordAlreadyExistsException;
 use Oc\Repository\Exception\RecordNotFoundException;
@@ -17,41 +19,30 @@ class CacheLogsRepository
     /** @var Connection */
     private $connection;
 
-    /**
-     * @var LogTypesRepository
-     */
+    /** @var LogTypesRepository */
     private $logTypesRepository;
 
-    /**
-     * @var UserRepository
-     */
+    /** @var UserRepository */
     private $userRepository;
 
-    /**
-     * @var PicturesRepository
-     */
+    /** @var PicturesRepository */
     private $picturesRepository;
 
-    /**
-     * @var CacheRatingRepository
-     */
+    /** @var CacheRatingRepository */
     private $cacheRatingRepository;
 
     /**
-     * CachesRepository constructor.
-     *
      * @param Connection $connection
      * @param LogTypesRepository $logTypesRepository
      * @param UserRepository $userRepository
      * @param PicturesRepository $picturesRepository
      * @param CacheRatingRepository $cacheRatingRepository
      */
-
     public function __construct(
-        Connection $connection,
-        LogTypesRepository $logTypesRepository,
-        UserRepository $userRepository,
-        PicturesRepository $picturesRepository,
+        Connection            $connection,
+        LogTypesRepository    $logTypesRepository,
+        UserRepository        $userRepository,
+        PicturesRepository    $picturesRepository,
         CacheRatingRepository $cacheRatingRepository
     )
     {
@@ -64,9 +55,10 @@ class CacheLogsRepository
 
     /**
      * @return array
+     * @throws RecordNotFoundException
      * @throws RecordsNotFoundException
      */
-    public function fetchAll()
+    public function fetchAll(): array
     {
         $statement = $this->connection->createQueryBuilder()
             ->select('*')
@@ -90,11 +82,10 @@ class CacheLogsRepository
 
     /**
      * @param array $where
-     *
      * @return GeoCacheLogsEntity
      * @throws RecordNotFoundException
      */
-    public function fetchOneBy(array $where = [])
+    public function fetchOneBy(array $where = []): GeoCacheLogsEntity
     {
         $queryBuilder = $this->connection->createQueryBuilder()
             ->select('*')
@@ -120,17 +111,15 @@ class CacheLogsRepository
 
     /**
      * @param array $where
-     *
      * @return array
      * @throws RecordNotFoundException
      */
-    public function fetchBy(array $where = [])
+    public function fetchBy(array $where = []): array
     {
         $queryBuilder = $this->connection->createQueryBuilder()
             ->select('*')
             ->from(self::TABLE)
             ->orderBy('date_created', 'DESC');
-
 
 
         if (count($where) > 0) {
@@ -153,12 +142,11 @@ class CacheLogsRepository
     }
 
     /**
-     * @return array
-     * @throws RecordNotFoundException
+     * @param int $cacheId
+     * @return int[]
      */
-
-    public function countLogs(int $cacheId)
-    : array {
+    public function countLogs(int $cacheId): array
+    {
         $entities = [
             '1' => 0,
             '2' => 0,
@@ -182,9 +170,9 @@ class CacheLogsRepository
 
         $result = $statement->fetchAll();
 
-        if ($statement->rowCount() >= 1) {
+        if ($statement->rowCount() != 0) {
             foreach ($result as $item) {
-                $entities[(int) $item['type']]++;
+                $entities[(int)$item['type']]++;
             }
         }
 
@@ -193,12 +181,10 @@ class CacheLogsRepository
 
     /**
      * @param array $where
-     *
      * @return int
-     * @throws RecordNotFoundException
      */
-    public function getCountPictures(array $where = [])
-    : int {
+    public function getCountPictures(array $where = []): int
+    {
         $queryBuilder = $this->connection->createQueryBuilder()
             ->select('COALESCE(SUM(picture),0)')
             ->from(self::TABLE);
@@ -213,16 +199,19 @@ class CacheLogsRepository
 
         $result = $statement->fetch();
 
-        return $result['COALESCE(SUM(picture),0)'];
+        if (count($result) === 0) {
+            return 0;
+        } else {
+            return (int)$result['SUM(picture)'];
+        }
     }
 
 
     /**
      * @param GeoCacheLogsEntity $entity
-     *
      * @return GeoCacheLogsEntity
      * @throws RecordAlreadyExistsException
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
     public function create(GeoCacheLogsEntity $entity)
     {
@@ -237,19 +226,18 @@ class CacheLogsRepository
             $databaseArray
         );
 
-        $entity->id = (int) $this->connection->lastInsertId();
+        $entity->id = (int)$this->connection->lastInsertId();
 
         return $entity;
     }
 
     /**
      * @param GeoCacheLogsEntity $entity
-     *
      * @return GeoCacheLogsEntity
-     * @throws RecordAlreadyExistsException
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws RecordNotPersistedException
+     * @throws DBALException
      */
-    public function update(GeoCacheLogsEntity $entity)
+    public function update(GeoCacheLogsEntity $entity): GeoCacheLogsEntity
     {
         if ($entity->isNew()) {
             throw new RecordNotPersistedException('The entity does not exist.');
@@ -268,13 +256,12 @@ class CacheLogsRepository
 
     /**
      * @param GeoCacheLogsEntity $entity
-     *
      * @return GeoCacheLogsEntity
+     * @throws DBALException
+     * @throws InvalidArgumentException
      * @throws RecordNotPersistedException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\DBAL\Exception\InvalidArgumentException
      */
-    public function remove(GeoCacheLogsEntity $entity)
+    public function remove(GeoCacheLogsEntity $entity): GeoCacheLogsEntity
     {
         if ($entity->isNew()) {
             throw new RecordNotPersistedException('The entity does not exist.');
@@ -292,10 +279,9 @@ class CacheLogsRepository
 
     /**
      * @param GeoCacheLogsEntity $entity
-     *
      * @return array
      */
-    public function getDatabaseArrayFromEntity(GeoCacheLogsEntity $entity)
+    public function getDatabaseArrayFromEntity(GeoCacheLogsEntity $entity): array
     {
         return [
             'id' => $entity->id,
@@ -319,6 +305,7 @@ class CacheLogsRepository
             'text_htmledit' => $entity->textHtmledit,
             'owner_notified' => $entity->ownerNotified,
             'picture' => $entity->picture,
+            'gdpr_deletion' => $entity->gdprDeletion,
             'logType' => $entity->logType,
             'user' => $entity->user,
             'pictures' => $entity->pictures,
@@ -328,38 +315,38 @@ class CacheLogsRepository
 
     /**
      * @param array $data
-     *
      * @return GeoCacheLogsEntity
+     * @throws RecordNotFoundException
      */
-    public function getEntityFromDatabaseArray(array $data)
+    public function getEntityFromDatabaseArray(array $data): GeoCacheLogsEntity
     {
         $entity = new GeoCacheLogsEntity();
-        $entity->id = (int) $data['id'];
-        $entity->uuid = (string) $data['uuid'];
-        $entity->node = (int) $data['node'];
+        $entity->id = (int)$data['id'];
+        $entity->uuid = (string)$data['uuid'];
+        $entity->node = (int)$data['node'];
         $entity->dateCreated = new DateTime($data['date_created']);
         $entity->entryLastModified = new DateTime($data['entry_last_modified']);
         $entity->lastModified = new DateTime($data['last_modified']);
-        $entity->okapiSyncbase = (string) $data['okapi_syncbase'];
+        $entity->okapiSyncbase = (string)$data['okapi_syncbase'];
         $entity->logLastModified = new DateTime($data['log_last_modified']);
-        $entity->cacheId = (int) $data['cache_id'];
-        $entity->userId = (int) $data['user_id'];
-        $entity->type = (int) $data['type'];
-        $entity->ocTeamComment = (int) $data['oc_team_comment'];
+        $entity->cacheId = (int)$data['cache_id'];
+        $entity->userId = (int)$data['user_id'];
+        $entity->type = (int)$data['type'];
+        $entity->ocTeamComment = (int)$data['oc_team_comment'];
         $entity->date = new DateTime($data['date']);
         $entity->orderDate = new DateTime($data['order_date']);
-        $entity->needsMaintenance = (int) $data['needs_maintenance'];
-        $entity->listingOutdated = (int) $data['listing_outdated'];
-        $entity->text = (string) $data['text'];
-        $entity->textHtml = (int) $data['text_html'];
-        $entity->textHtmledit = (int) $data['text_htmledit'];
-        $entity->ownerNotified = (int) $data['owner_notified'];
+        $entity->needsMaintenance = (int)$data['needs_maintenance'];
+        $entity->listingOutdated = (int)$data['listing_outdated'];
+        $entity->text = (string)$data['text'];
+        $entity->textHtml = (int)$data['text_html'];
+        $entity->textHtmledit = (int)$data['text_htmledit'];
+        $entity->ownerNotified = (int)$data['owner_notified'];
         $entity->picture = $data['picture'];
+        $entity->gdprDeletion = $data['gdpr_deletion'];
         $entity->logType = $this->logTypesRepository->fetchOneBy(['id' => $entity->type]);
         $entity->user = $this->userRepository->fetchOneById($entity->userId);
-        $entity->pictures= $this->picturesRepository->fetchBy(['object_id' => $entity->id, 'object_type' => 1]);
-        $entity->ratingCacheLog = $this->cacheRatingRepository->getRatingUserCache(['cache_id'=> $entity->cacheId, 'user_id'=> $entity->userId, ]);
-
+        $entity->pictures = $this->picturesRepository->fetchBy(['object_id' => $entity->id, 'object_type' => 1]);
+        $entity->ratingCacheLog = $this->cacheRatingRepository->getRatingUserCache(['cache_id' => $entity->cacheId, 'user_id' => $entity->userId,]);
 
         return $entity;
     }

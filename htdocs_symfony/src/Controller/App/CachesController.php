@@ -47,8 +47,8 @@ class CachesController extends AbstractController
      *
      * @return Response
      */
-    public function cachesController_index(Request $request)
-    : Response {
+    public function cachesController_index(Request $request): Response
+    {
         $fetchedCaches = '';
 
         // create input field for caches_by_searchfield
@@ -68,9 +68,9 @@ class CachesController extends AbstractController
 
         return $this->render(
             'index/caches/basicview.html.twig', [
-                                                    'cachesForm' => $form->createView(),
-                                                    'caches_by_searchfield' => $fetchedCaches
-                                                ]
+                'cachesForm' => $form->createView(),
+                'caches_by_searchfield' => $fetchedCaches
+            ]
         );
     }
 
@@ -80,17 +80,15 @@ class CachesController extends AbstractController
      * @return Response
      * @Route("/cache/{wpID}", name="cache_by_wp_oc_gc")
      */
-    public function search_by_cache_wp(string $wpID)
-    : Response {
+    public function search_by_cache_wp(string $wpID): Response
+    {
         $fetchedCaches = [];
-        $cacheLogs = [];
 
         try {
             $fetchedCaches = $this->getCacheDetailsByWayPoint($wpID);
         } catch (\Exception $e) {
             //  tue was.. (status_not_found = true);
         }
-
 
         return $this->render('index/caches/detailview.html.twig', ['cache_by_id' => $fetchedCaches]); //+ status_not_found + abfragen in twig, Z.B.
     }
@@ -100,8 +98,8 @@ class CachesController extends AbstractController
      *
      * @return array
      */
-    public function getCachesForSearchField(string $searchtext)
-    : array {
+    public function getCachesForSearchField(string $searchtext): array
+    {
         //      so sieht die SQL-Vorlage aus..
         //        SELECT cache_id, name, wp_oc, user.username
         //        FROM caches
@@ -130,8 +128,8 @@ class CachesController extends AbstractController
      * @return array
      * @throws RecordNotFoundException
      */
-    public function getCacheDetailsById(int $id)
-    : array {
+    public function getCacheDetailsById(int $id): array
+    {
         $fetchedCache = $this->cachesRepository->fetchOneBy(['cache_id' => $id]);
 
         return [$this->cachesRepository->getDatabaseArrayFromEntity($fetchedCache)];
@@ -143,8 +141,8 @@ class CachesController extends AbstractController
      * @return array
      * @throws RecordNotFoundException
      */
-    public function getCacheDetailsByWayPoint(string $wayPoint)
-    : array {
+    public function getCacheDetailsByWayPoint(string $wayPoint): array
+    {
         $fetchedCache = $this->cachesRepository->fetchOneBy(['wp_oc' => $wayPoint]);
 
         return [$this->cachesRepository->getDatabaseArrayFromEntity($fetchedCache)];
@@ -157,8 +155,8 @@ class CachesController extends AbstractController
      * @return array
      * @throws RecordNotFoundException
      */
-    public function getCacheLogsByWayPoint(string $wayPoint)
-    : array {
+    public function getCacheLogsByWayPoint(string $wayPoint): array
+    {
         $fetchedCache = $this->cacheLogsRepository->fetchOneBy(['wp_oc' => $wayPoint]);
 
         return [$this->cacheLogsRepository->getDatabaseArrayFromEntity($fetchedCache)];

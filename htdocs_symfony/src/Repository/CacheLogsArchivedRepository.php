@@ -4,6 +4,8 @@ namespace Oc\Repository;
 
 use DateTime;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception\InvalidArgumentException;
 use Oc\Entity\GeoCacheLogsArchivedEntity;
 use Oc\Repository\Exception\RecordAlreadyExistsException;
 use Oc\Repository\Exception\RecordNotFoundException;
@@ -36,7 +38,7 @@ class CacheLogsArchivedRepository
      * @return array
      * @throws RecordsNotFoundException
      */
-    public function fetchAll()
+    public function fetchAll(): array
     {
         $statement = $this->connection->createQueryBuilder()
             ->select('*')
@@ -60,11 +62,10 @@ class CacheLogsArchivedRepository
 
     /**
      * @param array $where
-     *
      * @return GeoCacheLogsArchivedEntity
      * @throws RecordNotFoundException
      */
-    public function fetchOneBy(array $where = [])
+    public function fetchOneBy(array $where = []): GeoCacheLogsArchivedEntity
     {
         $queryBuilder = $this->connection->createQueryBuilder()
             ->select('*')
@@ -90,11 +91,10 @@ class CacheLogsArchivedRepository
 
     /**
      * @param array $where
-     *
      * @return array
-     * @throws RecordsNotFoundException
+     * @throws \Exception
      */
-    public function fetchBy(array $where = [])
+    public function fetchBy(array $where = []): array
     {
         $queryBuilder = $this->connection->createQueryBuilder()
             ->select('*')
@@ -125,12 +125,11 @@ class CacheLogsArchivedRepository
 
     /**
      * @param GeoCacheLogsArchivedEntity $entity
-     *
      * @return GeoCacheLogsArchivedEntity
+     * @throws DBALException
      * @throws RecordAlreadyExistsException
-     * @throws \Doctrine\DBAL\DBALException
      */
-    public function create(GeoCacheLogsArchivedEntity $entity)
+    public function create(GeoCacheLogsArchivedEntity $entity): GeoCacheLogsArchivedEntity
     {
         if (!$entity->isNew()) {
             throw new RecordAlreadyExistsException('The entity does already exist.');
@@ -143,19 +142,18 @@ class CacheLogsArchivedRepository
             $databaseArray
         );
 
-        $entity->id = (int) $this->connection->lastInsertId();
+        $entity->id = (int)$this->connection->lastInsertId();
 
         return $entity;
     }
 
     /**
      * @param GeoCacheLogsArchivedEntity $entity
-     *
      * @return GeoCacheLogsArchivedEntity
+     * @throws DBALException
      * @throws RecordNotPersistedException
-     * @throws \Doctrine\DBAL\DBALException
      */
-    public function update(GeoCacheLogsArchivedEntity $entity)
+    public function update(GeoCacheLogsArchivedEntity $entity): GeoCacheLogsArchivedEntity
     {
         if ($entity->isNew()) {
             throw new RecordNotPersistedException('The entity does not exist.');
@@ -174,13 +172,12 @@ class CacheLogsArchivedRepository
 
     /**
      * @param GeoCacheLogsArchivedEntity $entity
-     *
      * @return GeoCacheLogsArchivedEntity
+     * @throws DBALException
      * @throws RecordNotPersistedException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\DBAL\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
-    public function remove(GeoCacheLogsArchivedEntity $entity)
+    public function remove(GeoCacheLogsArchivedEntity $entity): GeoCacheLogsArchivedEntity
     {
         if ($entity->isNew()) {
             throw new RecordNotPersistedException('The entity does not exist.');
@@ -198,10 +195,9 @@ class CacheLogsArchivedRepository
 
     /**
      * @param GeoCacheLogsArchivedEntity $entity
-     *
      * @return array
      */
-    public function getDatabaseArrayFromEntity(GeoCacheLogsArchivedEntity $entity)
+    public function getDatabaseArrayFromEntity(GeoCacheLogsArchivedEntity $entity): array
     {
         return [
             'id' => $entity->id,
@@ -233,37 +229,36 @@ class CacheLogsArchivedRepository
 
     /**
      * @param array $data
-     *
      * @return GeoCacheLogsArchivedEntity
      * @throws \Exception
      */
-    public function getEntityFromDatabaseArray(array $data)
+    public function getEntityFromDatabaseArray(array $data): GeoCacheLogsArchivedEntity
     {
         $entity = new GeoCacheLogsArchivedEntity();
-        $entity->id = (int) $data['id'];
-        $entity->uuid = (string) $data['uuid'];
-        $entity->node = (int) $data['node'];
+        $entity->id = (int)$data['id'];
+        $entity->uuid = (string)$data['uuid'];
+        $entity->node = (int)$data['node'];
         $entity->dateCreated = new DateTime($data['date_created']);
         $entity->entryLastModified = new DateTime($data['entry_last_modified']);
-        $entity->lastModified = date('Y-m-d H:i:s');
-        $entity->okapiSyncbase = (string) $data['okapi_syncbase'];
+        $entity->lastModified = new DateTime($data['last_modified']);
+        $entity->okapiSyncbase = (string)$data['okapi_syncbase'];
         $entity->logLastModified = new DateTime($data['log_last_modified']);
-        $entity->cacheId = (int) $data['cache_id'];
-        $entity->userId = (int) $data['user_id'];
-        $entity->type = (int) $data['type'];
-        $entity->ocTeamComment = (int) $data['oc_team_comment'];
+        $entity->cacheId = (int)$data['cache_id'];
+        $entity->userId = (int)$data['user_id'];
+        $entity->type = (int)$data['type'];
+        $entity->ocTeamComment = (int)$data['oc_team_comment'];
         $entity->date = new DateTime($data['date']);
         $entity->orderDate = new DateTime($data['order_date']);
-        $entity->needsMaintenance = (int) $data['needs_maintenance'];
-        $entity->listingOutdated = (int) $data['listing_outdated'];
-        $entity->text = (string) $data['text'];
-        $entity->textHtml = (int) $data['text_html'];
-        $entity->textHtmledit = (int) $data['text_htmledit'];
-        $entity->ownerNotified = (int) $data['owner_notified'];
+        $entity->needsMaintenance = (int)$data['needs_maintenance'];
+        $entity->listingOutdated = (int)$data['listing_outdated'];
+        $entity->text = (string)$data['text'];
+        $entity->textHtml = (int)$data['text_html'];
+        $entity->textHtmledit = (int)$data['text_htmledit'];
+        $entity->ownerNotified = (int)$data['owner_notified'];
         $entity->picture = $data['picture'];
         $entity->deletionDate = new DateTime($data['deletion_date']);
-        $entity->deletedBy = (int) $data['deleted_by'];
-        $entity->restoredBy = (int) $data['restored_by'];
+        $entity->deletedBy = (int)$data['deleted_by'];
+        $entity->restoredBy = (int)$data['restored_by'];
 
         return $entity;
     }
