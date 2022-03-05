@@ -176,7 +176,7 @@
                                 <img src="http://docker.team-opencaching.de/resource2/ocstyle/images/viewcache/ignore-16.png" class="icon16"
                                      alt=""> {{ cache.ignore_count }} Ignorierer<br>
                                 <img src="http://docker.team-opencaching.de/resource2/ocstyle/images/viewcache/16x16-visitors.png" class="icon16" alt="">
-                                Aufrufe<br>
+                                             {{ cache.visits_count }} Aufrufe<br>
                                 <span style="white-space:nowrap;"><img
                                             src="http://docker.team-opencaching.de/resource2/ocstyle/images/viewcache/16x16-pictures.png" class="icon16"
                                             alt=""> {{ cache.picture_count }} Logbilder</span><br>
@@ -213,7 +213,7 @@
                 {{ cache.cache_logs|length }}
 
                 {{ dump(cache) }}
-
+                {% if cache.cache_logs is defined %}
                 {% for cacheLogs in cache.cache_logs %}
 
                     <div class="container p-3 my-3 border">
@@ -298,6 +298,7 @@
 
 
                 {% endfor %}
+                {% endif %}
 
 
 
@@ -313,28 +314,32 @@
 <div class="buffer" style="width: 500px;">&nbsp;</div>
 {% endif %}
 
-                {#
-<!-- Already found this cache? -->
-{% if $cache.userhasfound || $cache.needs_maintenance || $cache.listing_outdated ||
-$cache.status==2 || $cache.status==3 || $cache.status==$GeoCacheTypeEvent || $cache.status==7 %}
+
+<!-- Already found this cache?
+
+cache.userhasfound or
+cache.status==$GeoCacheTypeEvent or -->
+
+{% if cache.needs_maintenance or cache.listing_outdated or cache.status==2 or cache.status==3 or  cache.status==7 %}
 <div id="havefound">
-    {strip}
     <p>
-        {% if $cache.status==2 %}
+
+        {{ app.user.userId }}
+        {% if cache.status==2 %}
         <img src="resource2/{$opt.template.style}/images/cachestatus/32x32-disabled.png" width="32" height="32" style="padding-right: 6px;" alt="{t}Temporarily not available{/t}" title="{t}Temporarily not available{/t}" />
-        {% elseif $cache.status==3 %}
+        {% elseif cache.status==3 %}
         <img src="resource2/{$opt.template.style}/images/cachestatus/32x32-archived.png" width="32" height="32" style="padding-right: 6px;" alt="{t}Archived{/t}" title="{t}Archived{/t}" />
-        {% elseif $cache.status==$GeoCacheTypeEvent %}
+        {#  {% elseif cache.status==$GeoCacheTypeEvent %}
         <img src="resource2/{$opt.template.style}/images/cachestatus/32x32-locked.png" width="32" height="32" style="padding-right: 6px;" alt="{t}Locked{/t}" title="{t}Locked{/t}" />
-        {% endif %}
-        {% if $cache.needs_maintenance}<img src="resource2/{$opt.template.style}/images/cachestatus/needs-maintenance.png" width="32" height="32" style="padding-right: 5px;" alt="{t}The geocache needs maintenance.{/t}" title="{t}The geocache needs maintenance.{/t}" />{% endif %}
-        {% if $cache.listing_outdated}<img src="resource2/{$opt.template.style}/images/cachestatus/listing-outdated.png" width="32" height="32" style="padding-right: 5px;" alt="{t}The geocache description is outdated.{/t}" title="{t}The geocache description is outdated.{/t}" />{% endif %}
-        {% if $cache.userhasfound}&nbsp;<img src="resource2/{$opt.template.style}/images/viewcache/have-found.png" width="35" height="35" style="padding-right: 5px;" alt="{% if $cache.type==$GeoCacheTypeEvent %}{t}You have attended this event!{/t}{% else %}{t}You have already found this cache!{/t}{% endif %}" title="{% if $cache.type==$GeoCacheTypeEvent %}{t}You have attended this event!{/t}{% else %}{t}You have already found this cache!{/t}{% endif %}" />{% endif %}
-    </p>
-    {/strip}
+        #}{% endif %}
+        {% if cache.needs_maintenance %}<img src="resource2/{$opt.template.style}/images/cachestatus/needs-maintenance.png" width="32" height="32" style="padding-right: 5px;" alt="{t}The geocache needs maintenance.{/t}" title="{t}The geocache needs maintenance.{/t}" />{% endif %}
+        {% if cache.listing_outdated %}<img src="resource2/{$opt.template.style}/images/cachestatus/listing-outdated.png" width="32" height="32" style="padding-right: 5px;" alt="{t}The geocache description is outdated.{/t}" title="{t}The geocache description is outdated.{/t}" />{% endif %}
+        {#  {% if cache.userhasfound}&nbsp;<img src="resource2/{$opt.template.style}/images/viewcache/have-found.png" width="35" height="35" style="padding-right: 5px;" alt="{% if $cache.type==$GeoCacheTypeEvent %}{t}You have attended this event!{/t}{% else %}{t}You have already found this cache!{/t}{% endif %}" title="{% if $cache.type==$GeoCacheTypeEvent %}{t}You have attended this event!{/t}{% else %}{t}You have already found this cache!{/t}{% endif %}" />{% endif %} #}
+      </p>
 </div>
-<!--[if IE]><div></div><![endif]-->
+
 {% endif %}
+{#
 <!-- Cachemeta -->
 <div class="content2-container line-box" style="float:left">  {* div height will be wroing without float:left - why *}
     <div class="">
@@ -475,7 +480,7 @@ $cache.status==2 || $cache.status==3 || $cache.status==$GeoCacheTypeEvent || $ca
                                 {% if cache.needs_maintenance %}<img src="resource2/{$opt.template.style}/images/viewcache/16x16-maintenance.png" class="icon16" alt="" /> {{ cache.needs_maintenance }} {% if cache.needs_maintenance == 1 %}{t}Maintenance log{/t}{% else %}{t}Maintenance logs{/t}{% endif %}<br />{% endif %}
                                 <img src="resource2/{$opt.template.style}/images/viewcache/16x16-watch.png" class="icon16" alt="" /> {{ cache.watches_count }} {% if cache.watches_count == 1 %}{t}Watcher{/t}{% else %}{t}Watchers{/t}{% endif %}<br />
                                 <img src="resource2/{$opt.template.style}/images/viewcache/ignore-16.png" class="icon16" alt="" /> {{ cache.ignore_count }} {% if cache.ignore_count == 1 %}{t}Ignorer{/t}{% else %}{t}Ignorers{/t}{% endif %}<br />
-                                <img src="resource2/{$opt.template.style}/images/viewcache/16x16-visitors.png" class="icon16" alt="" /> {# {$cache.visits} {% if cache.visits==1 %}{t}Page visit{/t}{% else %}{t}Page visits{/t}{% endif %}#}<br />
+                                <img src="resource2/{$opt.template.style}/images/viewcache/16x16-visitors.png" class="icon16" alt="" /> {{ cache.visits_count }} {% if cache.visits_count==1 %}{t}Page visit{/t}{% else %}{t}Page visits{/t}{% endif %}#}<br />
                                 <span style="white-space:nowrap;"><img src="resource2/{$opt.template.style}/images/viewcache/16x16-pictures.png" class="icon16" alt="" /> {{ cache.picture_count }} {% if cache.picture_count >0 %}<a class="link" href="viewcache.php?cacheid={$cache.cacheid|urlencode}&logpics=1">{% endif %}{% if cache.picture_count ==1 %}{t}Log picture{/t}{% else %}{t}Log pictures{/t}{% endif %}{% if cache.picture_count >0 %}</a>{% endif %}</span><br />
                                 <span style="white-space:nowrap;"><img src="resource2/{$opt.template.style}/images/viewcache/gk.png" class="icon16" alt="" title="" /> <a href="https://geokrety.org/szukaj.php?lang={$opt.geokrety.locales[$opt.template.locale]}&wpt={{ cache.wp_oc}}" target="_blank">{t}Geokrety history{/t}</a></span><br />
                                 {% if cache.rating_count > 0 %}

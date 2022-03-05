@@ -116,14 +116,13 @@ class CacheVisitsRepository
     /**
      * @param array $where
      *
-     * @return array
-     * @throws RecordsNotFoundException
+     * @return int
+     * @throws RecordNotFoundException
      */
-    public function fetchByCount(array $where = [])
-    {
-
+    public function getCountVisits(array $where = [])
+    : int {
         $queryBuilder = $this->connection->createQueryBuilder()
-            ->select('*')
+            ->select('COALESCE(SUM(count), 0)')
             ->from(self::TABLE);
 
         if (count($where) > 0) {
@@ -134,19 +133,13 @@ class CacheVisitsRepository
 
         $statement = $queryBuilder->execute();
 
-        $result = $statement->fetchAll();
+        $result = $statement->fetch();
 
         if ($statement->rowCount() === 0) {
-            throw new RecordsNotFoundException('No records with given where clause found');
+            throw new RecordNotFoundException('Record with given where clause not found');
         }
 
-        $entities = [];
-
-        foreach ($result as $item) {
-            $entities[] = $this->getEntityFromDatabaseArray($item);
-        }
-
-        return $entities;
+        return $result['COALESCE(SUM(count), 0)'];
     }
 
     /**

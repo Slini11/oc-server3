@@ -6,9 +6,13 @@ namespace Oc\Controller\Backend;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception\InvalidArgumentException;
+use Exception;
 use Oc\Entity\SupportListingCommentsEntity;
 use Oc\Entity\SupportUserCommentsEntity;
+use Oc\Form\SupportBonusCachesAssignment;
 use Oc\Form\SupportCommentField;
+use Oc\Form\SupportImportGPX;
 use Oc\Form\SupportSearchCaches;
 use Oc\Form\SupportSQLFlexForm;
 use Oc\Form\SupportUserAccountDetails;
@@ -19,15 +23,18 @@ use Oc\Repository\CacheReportsRepository;
 use Oc\Repository\CachesRepository;
 use Oc\Repository\CacheStatusModifiedRepository;
 use Oc\Repository\CacheStatusRepository;
+use Oc\Repository\Exception\RecordAlreadyExistsException;
 use Oc\Repository\Exception\RecordNotFoundException;
 use Oc\Repository\Exception\RecordNotPersistedException;
 use Oc\Repository\Exception\RecordsNotFoundException;
+use Oc\Repository\NodesRepository;
 use Oc\Repository\SupportBonuscachesRepository;
 use Oc\Repository\SupportListingCommentsRepository;
 use Oc\Repository\SupportListingInfosRepository;
 use Oc\Repository\SupportUserCommentsRepository;
 use Oc\Repository\SupportUserRelationsRepository;
 use Oc\Repository\UserRepository;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,9 +44,16 @@ use Symfony\Component\Routing\Annotation\Route;
  * Class SupportController
  *
  * @package Oc\Controller\Backend
+ * @Security("is_granted('ROLE_SUPPORT_TRAINEE')") // now, the whole Support functions are limited to ROLE_.. and above!
  */
 class SupportController extends AbstractController
 {
+    //  0 - frisch importiert
+    // 20 - Import abgeschlossen. Änderungen, sofern vorhanden, wurden verarbeitet.
+    const IMPORT_STATUS_NEW = 0;
+
+    const IMPORT_STATUS_FINISHED = 20;
+
     /** @var Connection */
     private $connection;
 
@@ -63,6 +77,9 @@ class SupportController extends AbstractController
 
     /** @var CacheStatusRepository */
     private $cacheStatusRepository;
+
+    /** @var NodesRepository */
+    private $nodesRepository;
 
     /** @var SupportBonuscachesRepository */
     private $supportBonuscachesRepository;
@@ -91,6 +108,7 @@ class SupportController extends AbstractController
      * @param CacheReportsRepository $cacheReportsRepository
      * @param CacheStatusModifiedRepository $cacheStatusModifiedRepository
      * @param CacheStatusRepository $cacheStatusRepository
+     * @param NodesRepository $nodesRepository
      * @param SupportBonuscachesRepository $supportBonuscachesRepository
      * @param SupportListingCommentsRepository $supportListingCommentsRepository
      * @param SupportListingInfosRepository $supportListingInfosRepository
@@ -107,6 +125,7 @@ class SupportController extends AbstractController
         CacheReportsRepository $cacheReportsRepository,
         CacheStatusModifiedRepository $cacheStatusModifiedRepository,
         CacheStatusRepository $cacheStatusRepository,
+        NodesRepository $nodesRepository,
         SupportBonuscachesRepository $supportBonuscachesRepository,
         SupportListingCommentsRepository $supportListingCommentsRepository,
         SupportListingInfosRepository $supportListingInfosRepository,
@@ -122,6 +141,7 @@ class SupportController extends AbstractController
         $this->cacheReportsRepository = $cacheReportsRepository;
         $this->cacheStatusModifiedRepository = $cacheStatusModifiedRepository;
         $this->cacheStatusRepository = $cacheStatusRepository;
+        $this->nodesRepository = $nodesRepository;
         $this->supportBonuscachesRepository = $supportBonuscachesRepository;
         $this->supportListingCommentsRepository = $supportListingCommentsRepository;
         $this->supportListingInfosRepository = $supportListingInfosRepository;
@@ -177,6 +197,8 @@ class SupportController extends AbstractController
      * @throws RecordNotFoundException
      * @throws RecordsNotFoundException
      * @Route("/reportedCaches", name="support_reported_caches")
+     * @Security("is_granted('ROLE_SUPPORT_TRAINEE')")
+     *
      */
     public function listReportedCaches()
     : Response
@@ -197,20 +219,145 @@ class SupportController extends AbstractController
      * @return Response
      *
      * @Route("/bonusCaches", name="support_bonus_caches")
+     * @Security("is_granted('ROLE_SUPPORT_MAINTAIN')")
      */
     public function listBonusCaches()
     : Response
     {
-        $fetchedBonuscaches = $this->getBonusCaches();
-
         $formSearch = $this->createForm(SupportSearchCaches::class);
+        $formAssignBonusCache = $this->createForm(SupportBonusCachesAssignment::class);
+
+        $fetchedBonuscaches = $this->getBonusCaches();
 
         return $this->render(
             'backend/support/bonusCaches.html.twig', [
                                                        'supportCachesForm' => $formSearch->createView(),
+                                                       'supportAssignBonusCacheForm' => $formAssignBonusCache->createView(),
                                                        'bonusCaches_by_id' => $fetchedBonuscaches
                                                    ]
         );
+    }
+
+    /**
+     * @param string $wpID
+     *
+     * @return Response
+     * @throws RecordNotFoundException
+     *
+     * @Route("/bonusCachesAssignmentChoice/{wpID}", name="support_bonus_caches_assignment_choice")
+     * @Security("is_granted('ROLE_SUPPORT_MAINTAIN')")
+     */
+    public function bonusCachesAssignmentChoice(string $wpID)
+    : Response {
+        $formSearch = $this->createForm(SupportSearchCaches::class);
+
+        $fetchedCache = $this->cachesRepository->fetchOneBy(['wp_Oc' => $wpID]);
+        $fetchedOwnerCaches = $this->cachesRepository->fetchBy(['user_id' => $fetchedCache->userId]);
+
+        return $this->render(
+            'backend/support/bonusCachesAssignment.html.twig', [
+                                                                 'supportCachesForm' => $formSearch->createView(),
+                                                                 'bonus_Cache' => $wpID,
+                                                                 'caches_by_owner' => $fetchedOwnerCaches
+                                                             ]
+        );
+    }
+
+    /**
+     * @param string $wpID
+     * @param int $userID
+     * @param string $toBonusCache
+     *
+     * @return Response
+     * @throws DBALException
+     * @throws RecordAlreadyExistsException
+     * @throws RecordNotPersistedException
+     *
+     * @Route("/bonusCachesAssignment/{wpID}&{userID}&{toBonusCache}", name="support_bonus_caches_assignment")
+     * @Security("is_granted('ROLE_SUPPORT_MAINTAIN')")
+     */
+    public function bonusCachesAssignment(string $wpID, int $userID, string $toBonusCache)
+    : Response {
+        $formSearch = $this->createForm(SupportSearchCaches::class);
+
+        $fetchedOwnerCaches = $this->cachesRepository->fetchBy(['user_id' => $userID]);
+
+        $this->supportBonuscachesRepository->update_or_create_bonus_entry($wpID, $toBonusCache);
+
+        return $this->render(
+            'backend/support/bonusCachesAssignment.html.twig', [
+                                                                 'supportCachesForm' => $formSearch->createView(),
+                                                                 'bonus_Cache' => $toBonusCache,
+                                                                 'caches_by_owner' => $fetchedOwnerCaches
+                                                             ]
+        );
+    }
+
+    /**
+     * @param Request $request
+     *
+     * @return Response
+     * @throws DBALException
+     * @throws RecordAlreadyExistsException
+     * @throws RecordNotPersistedException
+     *
+     * @Route("/bonusCachesDirectAssignment", name="support_directly_assign_bonus_cache")
+     * @Security("is_granted('ROLE_SUPPORT_MAINTAIN')")
+     */
+    public function bonusCachesDirectAssignment(Request $request)
+    : Response {
+        $formDirectBonusAssignment = $this->createForm(SupportBonusCachesAssignment::class);
+
+        $formDirectBonusAssignment->handleRequest($request);
+        if ($formDirectBonusAssignment->isSubmitted() && $formDirectBonusAssignment->isValid()) {
+            $inputData = $formDirectBonusAssignment->getData();
+            $cacheBelongToBonus = strtoupper($inputData['content_wp_to_be_assigned'] . '');
+            $cacheIsBonus = strtoupper($inputData['content_wp_that_is_bonus_cache']);
+
+            if (!($this->cachesRepository->isNew($cacheIsBonus)) && ($cacheBelongToBonus === '')) {
+                $this->supportBonuscachesRepository->update_or_create_bonus_entry($cacheIsBonus, '', true);
+            } elseif (!($this->cachesRepository->isNew($cacheBelongToBonus)) && !($this->cachesRepository->isNew($cacheIsBonus))) {
+                $this->supportBonuscachesRepository->update_or_create_bonus_entry($cacheBelongToBonus, $cacheIsBonus);
+            }
+        }
+
+        return $this->redirectToRoute('backend_support_bonus_caches');
+    }
+
+    /**
+     * @param string $wpID
+     * @param bool $removeToBonus
+     * @param bool $removeBonus
+     *
+     * @return Response
+     * @throws DBALException
+     * @throws RecordNotFoundException
+     * @throws RecordNotPersistedException
+     * @throws InvalidArgumentException
+     *
+     * @Route("/removeBonusCachesAssignment/{wpID}&{removeToBonus}&{removeBonus}", name="support_remove_bonus_caches_assignment")
+     * @Security("is_granted('ROLE_SUPPORT_MAINTAIN')")
+     */
+    public function removeBonusCachesAssignment(string $wpID, bool $removeToBonus, bool $removeBonus)
+    : Response {
+        $fetchedBonusCache = $this->supportBonuscachesRepository->fetchOneBy(['wp_oc' => $wpID]);
+
+        if ($fetchedBonusCache) {
+            if ($removeToBonus) {
+                $fetchedBonusCache->belongsToBonusCache = '';
+            }
+            if ($removeBonus) {
+                $fetchedBonusCache->isBonusCache = false;
+            }
+        }
+
+        if (($fetchedBonusCache->belongsToBonusCache == '') && ($fetchedBonusCache->isBonusCache == false)) {
+            $this->supportBonuscachesRepository->remove($fetchedBonusCache);
+        } else {
+            $this->supportBonuscachesRepository->update($fetchedBonusCache);
+        }
+
+        return $this->redirectToRoute('backend_support_bonus_caches');
     }
 
     /**
@@ -224,15 +371,15 @@ class SupportController extends AbstractController
         $fetchedInformation = [];
 
         $formSearch = $this->createForm(SupportSearchCaches::class);
+        $formSQLFlex = $this->createForm(SupportSQLFlexForm::class);
 
-        $form = $this->createForm(SupportSQLFlexForm::class);
+        $formSQLFlex->handleRequest($request);
 
-        $form->handleRequest($request);
+        if ($formSQLFlex->isSubmitted() && $formSQLFlex->isValid()) {
+            $inputData = $formSQLFlex->getData();
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $inputData = $form->getData();
-
-            $fetchedInformation = $this->executeSQL_flexible($inputData['content_WHAT'], $inputData['content_TABLE']);
+            $fetchedInformation =
+                $this->executeSQL_flexible($inputData['content_WHAT'], $inputData['content_TABLE'], (string) $inputData['content_CONDITION']);
 
             $countFetched = count($fetchedInformation);
             for ($i = 0; $i < $countFetched; $i ++) {
@@ -251,7 +398,7 @@ class SupportController extends AbstractController
         return $this->render(
             'backend/support/databaseQueries.html.twig', [
                                                            'supportCachesForm' => $formSearch->createView(),
-                                                           'SQLFlexForm' => $form->createView(),
+                                                           'SQLFlexForm' => $formSQLFlex->createView(),
                                                            'suppSQLqueryFlex' => $fetchedInformation
                                                        ]
         );
@@ -264,6 +411,7 @@ class SupportController extends AbstractController
      * @throws RecordNotFoundException
      * @throws RecordsNotFoundException
      * @Route("/cacheHistory/{wpID}", name="support_cache_history")
+     * @Security("is_granted('ROLE_SUPPORT_TRAINEE')")
      */
     public function list_cache_history(string $wpID)
     : Response {
@@ -300,6 +448,7 @@ class SupportController extends AbstractController
      * @throws RecordNotFoundException
      * @throws RecordsNotFoundException
      * @Route("/repCaches/{repID}", name="support_reported_cache")
+     * @Security("is_granted('ROLE_SUPPORT_TRAINEE')")
      */
     public function list_reported_cache_details(int $repID)
     : Response {
@@ -330,9 +479,10 @@ class SupportController extends AbstractController
      * @return Response
      * @throws DBALException
      * @throws RecordNotFoundException
-     * @throws \Oc\Repository\Exception\RecordAlreadyExistsException
+     * @throws RecordAlreadyExistsException
      *
      * @Route("/occ/{wpID}&{userID}", name="support_occ")
+     * @Security("is_granted('ROLE_SUPPORT_MAINTAIN')")
      */
     public function occPage(string $wpID, int $userID)
     : Response {
@@ -351,14 +501,14 @@ class SupportController extends AbstractController
             // Supportkommentar zum Cache abholen. Ggf. neuen, leeren anlegen.
             try {
                 $fetchedCacheComments = $this->supportListingCommentsRepository->fetchOneBy(['wp_oc' => $wpID]);
-            } catch (\Exception $exception) {
+            } catch (Exception $exception) {
                 $entity = new SupportListingCommentsEntity($wpID);
                 $fetchedCacheComments = $this->supportListingCommentsRepository->create($entity);
             }
             // Cachedaten zu Fremnodes abholen (es können mehrere Einträge in der DB existieren)
             try {
                 $fetchedCacheInfos = $this->supportListingInfosRepository->fetchBy(['wp_oc' => $wpID]);
-            } catch (\Exception $exception) {
+            } catch (Exception $exception) {
             }
         }
 
@@ -367,14 +517,14 @@ class SupportController extends AbstractController
         // Supportkommentar zum Nutzer abolen. Ggf. neuen, leeren anlegen.
         try {
             $fetchedUserComments = $this->supportUserCommentsRepository->fetchOneBy(['oc_user_id' => $userID]);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $entity = new SupportUserCommentsEntity($userID);
             $fetchedUserComments = $this->supportUserCommentsRepository->create($entity);
         }
         // Nutzerdaten zu Fremnodes abholen (es können mehrere Einträge in der DB existieren)
         try {
             $fetchedUserRelations = $this->supportUserRelationsRepository->fetchBy(['oc_user_id' => $userID]);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
         }
 
         $formSearch = $this->createForm(SupportSearchCaches::class);
@@ -402,6 +552,7 @@ class SupportController extends AbstractController
      * @throws RecordNotFoundException
      * @throws RecordNotPersistedException
      * @Route("/occSaveText", name="support_occ_save_text")
+     * @Security("is_granted('ROLE_SUPPORT_MAINTAIN')")
      */
     public function occ_saveTextArea(Request $request)
     : Response {
@@ -437,6 +588,7 @@ class SupportController extends AbstractController
      * @throws RecordNotFoundException
      * @throws RecordNotPersistedException
      * @Route("/repCachesSaveText", name="support_reported_cache_save_text")
+     * @Security("is_granted('ROLE_SUPPORT_TRAINEE')")
      */
     public function repCaches_saveTextArea(Request $request)
     : Response {
@@ -466,6 +618,7 @@ class SupportController extends AbstractController
      * @throws RecordNotFoundException
      * @throws RecordNotPersistedException
      * @route("/repCachesAssignSupportuser/{repID}&{adminId}&{route}", name="support_reported_cache_supportuser_assignment")
+     * @Security("is_granted('ROLE_SUPPORT_TRAINEE')")
      */
     public function repCaches_supportuser_assignment(int $repID, int $adminId, string $route)
     : Response {
@@ -486,6 +639,7 @@ class SupportController extends AbstractController
      * @throws RecordNotFoundException
      * @throws RecordNotPersistedException
      * @route("/repCachesAssignSupportuser/{repID}&{route}", name="support_reported_cache_set_status")
+     * @Security("is_granted('ROLE_SUPPORT_TRAINEE')")
      */
     public function repCaches_setReportStatus(int $repID, string $route)
     : Response {
@@ -504,8 +658,9 @@ class SupportController extends AbstractController
      * @throws RecordNotFoundException
      *
      * @Route("/uad/{userID}", name="support_user_account_details")
+     * @Security("is_granted('ROLE_SUPPORT_TRAINEE')")
      */
-    public function user_account_details_Page(int $userID)
+    public function list_user_account_details(int $userID)
     : Response {
         $fetchedUserDetails = $this->userRepository->fetchOneById($userID);
 
@@ -527,7 +682,7 @@ class SupportController extends AbstractController
      *
      * @return array
      */
-    public function getCachesForSearchField(string $searchtext, bool $limit = false)
+    private function getCachesForSearchField(string $searchtext, bool $limit = false)
     : array {
         //      so sieht die SQL-Vorlage aus..
         //        SELECT name, wp_oc, wp_gc, wp_gc_maintained, user.username, user.email
@@ -562,15 +717,14 @@ class SupportController extends AbstractController
 
     /**
      * @return array
+     * @Security("is_granted('ROLE_SUPPORT_MAINTAIN')")
      */
     public function getBonusCaches()
     : array
     {
         try {
-            $fetchedBonusCaches = $this->supportBonuscachesRepository->fetchAll();
-
-            return $fetchedBonusCaches;
-        } catch (\Exception $exception) {
+            return $this->supportBonuscachesRepository->fetchAll();
+        } catch (Exception $exception) {
             return [];
         }
     }
@@ -579,6 +733,7 @@ class SupportController extends AbstractController
      * @return array
      * @throws RecordNotFoundException
      * @throws RecordsNotFoundException
+     * @Security("is_granted('ROLE_SUPPORT_TRAINEE')")
      */
     public function getReportedCaches()
     : array
@@ -591,6 +746,7 @@ class SupportController extends AbstractController
      *
      * @return Response
      * @Route("/dbQueries1/{days}", name="support_db_queries_1")
+     * @Security("is_granted('ROLE_SUPPORT_TRAINEE')")
      */
     public function executeSQL_caches_old_reg_date(int $days = 31) // List caches from users whose registration date is not older than x days.
     : Response
@@ -619,6 +775,7 @@ class SupportController extends AbstractController
      *
      * @return Response
      * @Route("/dbQueries2/{days}", name="support_db_queries_2")
+     * @Security("is_granted('ROLE_SUPPORT_TRAINEE')")
      */
     public function executeSQL_old_reg_date(int $days) // List user whose registration date is no older than x days.
     : Response
@@ -643,22 +800,28 @@ class SupportController extends AbstractController
     /**
      * @return Response
      * @Route("/dbQueries4", name="support_db_queries_4")
+     * @Security("is_granted('ROLE_SUPPORT_TRAINEE')")
      */
     public function executeSQL_caches_old_login_date(
-    ) // List (non-archived, non-locked) caches from users whose last login date is older than one year.
+    ) // List (non-archived, non-locked) caches from users whose last login date is older than one year, and the caches have DNFs or notes.
     : Response
     {
         $formSearch = $this->createForm(SupportSearchCaches::class);
 
         $qb = $this->connection->createQueryBuilder();
-        $qb->select('caches.name', 'caches.cache_id', 'caches.status', 'user.username', 'user.last_login')
+        $qb->select('caches.name', 'caches.cache_id', 'caches.status', 'user.user_id', 'user.username', 'user.last_login', 'count(cache_logs.type) as logCount')
+            ->distinct()
             ->from('caches')
             ->innerJoin('caches', 'user', 'user', 'caches.user_id = user.user_id')
+            ->innerJoin('caches', 'cache_logs', 'cache_logs', 'caches.cache_id = cache_logs.cache_id')
             ->where('user.last_login < now() - interval :searchTerm YEAR')
             ->andWhere('caches.status <= 2')
             ->andWhere(('caches.user_id = user.user_id'))
+            ->andWhere(('caches.cache_id = cache_logs.cache_id'))
+            ->andWhere(('cache_logs.type = 2 or cache_logs.type = 3'))
             ->setParameters(['searchTerm' => 1])
-            ->orderBy('user.last_login', 'ASC');
+            ->orderBy('user.last_login', 'ASC')
+            ->groupBy('caches.name');
 
         return $this->render(
             'backend/support/databaseQueries.html.twig', [
@@ -672,6 +835,7 @@ class SupportController extends AbstractController
      * @return Response
      * @throws RecordsNotFoundException
      * @Route("/dbQueries5", name="support_db_queries_5")
+     * @Security("is_granted('ROLE_SUPPORT_MAINTAIN')")
      */
     public function executeSQL_support_commented_user() // List users where a support user left a comment.
     : Response
@@ -689,14 +853,20 @@ class SupportController extends AbstractController
     /**
      * @param string $what
      * @param string $table
+     * @param string $condition
      *
      * @return array
+     *
+     * @Security("is_granted('ROLE_SUPPORT_MAINTAIN')")
      */
-    public function executeSQL_flexible(string $what, string $table)
+    public function executeSQL_flexible(string $what, string $table, string $condition)
     : array {
         $qb = $this->connection->createQueryBuilder();
         $qb->select($what)
             ->from($table);
+        if ($condition != '') {
+            $qb->where($condition);
+        }
 
         return ($qb->execute()->fetchAll());
     }
@@ -711,6 +881,7 @@ class SupportController extends AbstractController
      * @throws RecordNotPersistedException
      *
      * @route("/supportUADactions/{userID}", name="support_executeUAD_actions")
+     * @Security("is_granted('ROLE_SUPPORT_MAINTAIN')")
      */
     public function executeUAD_actions(Request $request, int $userID)
     : Response {
@@ -721,6 +892,9 @@ class SupportController extends AbstractController
                 // TODO: fill
             } elseif ($form->getClickedButton() === $form->get('button_GDPR_deletion')) {
                 // TODO: fill
+                // Achtung: für die DSGVO-Löschung müssen vorher der Account und die dazugehörigen Cachelistings deaktiviert werden!
+                //          Sonst kommt es zu unerwünschtem Verhalten (Caches noch logbar, obwohl Account deaktiviert ..)
+                //          Da das dem Inhalt des ersten Buttons (button_account_inactive) entspricht, genügt es vermutlich, dessen Funktion aufzurufen
             } elseif ($form->getClickedButton() === $form->get('button_mark_email_invalid')) {
                 $entity = $this->userRepository->fetchOneById($userID);
                 $entity->emailProblems = 1;
@@ -732,5 +906,317 @@ class SupportController extends AbstractController
         }
 
         return $this->redirectToRoute('backend_support_user_account_details', ['userID' => $userID]);
+    }
+
+    /**
+     * @param Request $request
+     *
+     * @return Response
+     * @throws Exception
+     *
+     * @route("/GPXimport/", name="support_gpx_import"), methods={"POST"}
+     * @Security("is_granted('ROLE_SUPPORT_MAINTAIN')")
+     *
+     * Button/Dialog zum Einlesen der GPX-Datei
+     * inklusive Rückinfo zu Anzahl eingelesener Caches
+     */
+    public function GPX_import(Request $request)
+    : Response {
+        $formSearch = $this->createForm(SupportSearchCaches::class);
+        $formUpload = $this->createForm(SupportImportGPX::class);
+        $amountProcessedCaches = 0;
+        $amountAssignedCaches = 0;
+        $amountUpdatedCaches = 0;
+        $listOfAmbiguousCaches = '';
+
+        $formUpload->handleRequest($request);
+
+        // if ($formUpload->isSubmitted() && $formUpload->isValid()) {
+        if ($formUpload->isSubmitted()) {
+            $waypoints_as_array = $this->read_Xml_file_and_get_array($formUpload['gpx_file']->getData()->getRealPath());
+
+            if (!empty($waypoints_as_array)) {
+                $result = $this->check_array_for_Oc_Gc_relations($waypoints_as_array);
+
+                $amountProcessedCaches = count($waypoints_as_array);
+                $amountAssignedCaches = $result[0];
+                $amountUpdatedCaches = $result[1];
+                $listOfAmbiguousCaches = $result[2];
+            }
+        }
+
+        try {
+            $fetchedListingInfos = $this->list_all_support_listing_infos();
+        } catch (Exception $exception) {
+            $fetchedListingInfos = [];
+        }
+
+        try {
+            $differencesDetected = $this->list_differences_table_listing_infos();
+        } catch (Exception $exception) {
+            $differencesDetected = [];
+        }
+
+        return $this->render(
+            'backend/support/occ_gpx_import.html.twig', [
+                                                          'supportCachesForm' => $formSearch->createView(),
+                                                          'supportUploadGPXForm' => $formUpload->createView(),
+                                                          'amountProcessedCaches' => $amountProcessedCaches,
+                                                          'amountAssignedCaches' => $amountAssignedCaches,
+                                                          'amountUpdatedCaches' => $amountUpdatedCaches,
+                                                          'listOfAmbiguousCaches' => $listOfAmbiguousCaches,
+                                                          'fetchedListingInfos' => $fetchedListingInfos,
+                                                          'differencesDetected' => $differencesDetected
+                                                      ]
+        );
+    }
+
+    /**
+     * @return array
+     * @throws RecordNotFoundException
+     * @throws RecordsNotFoundException
+     *
+     * Unterschiede zwischen importierten Caches und deren OC-Pendants herausfinden
+     */
+    public function list_differences_table_listing_infos()
+    : array
+    {
+        $fetchedListingInfos = $this->supportListingInfosRepository->fetchAll();
+        $differencesDetected = [];
+
+        foreach ($fetchedListingInfos as $fetchedListingInfo) {
+            $fetchedOCCache = $this->cachesRepository->fetchOneBy(['wp_oc' => $fetchedListingInfo->wpOc]);
+            $tempArray = [$fetchedListingInfo->wpOc . '/' . $fetchedListingInfo->nodeListingWp];
+
+            if ($fetchedOCCache->name != $fetchedListingInfo->nodeListingName) {
+                array_push($tempArray, $fetchedOCCache->name . ' != ' . $fetchedListingInfo->nodeListingName);
+            } else {
+                array_push($tempArray, '');
+            }
+
+            if ($fetchedOCCache->difficulty != $fetchedListingInfo->nodeListingDifficulty) {
+                array_push($tempArray, $fetchedOCCache->difficulty / 2 . ' != ' . $fetchedListingInfo->nodeListingDifficulty / 2);
+            } else {
+                array_push($tempArray, '');
+            }
+
+            if ($fetchedOCCache->terrain != $fetchedListingInfo->nodeListingTerrain) {
+                array_push($tempArray, $fetchedOCCache->terrain / 2 . ' != ' . $fetchedListingInfo->nodeListingTerrain / 2);
+            } else {
+                array_push($tempArray, '');
+            }
+
+            if (round($fetchedOCCache->longitude * 10000) != round($fetchedListingInfo->nodeListingCoordinatesLon * 10000)) {
+                array_push($tempArray, $fetchedOCCache->longitude . ' != ' . $fetchedListingInfo->nodeListingCoordinatesLon);
+            } else {
+                array_push($tempArray, '');
+            }
+
+            if (round($fetchedOCCache->latitude * 10000) != round($fetchedListingInfo->nodeListingCoordinatesLat * 10000)) {
+                array_push($tempArray, $fetchedOCCache->latitude . ' != ' . $fetchedListingInfo->nodeListingCoordinatesLat);
+            } else {
+                array_push($tempArray, '');
+            }
+
+            if ((($fetchedListingInfo->nodeListingAvailable == true) && ($fetchedOCCache->status != 1))
+                || (($fetchedListingInfo->nodeListingAvailable
+                     == false)
+                    && ($fetchedOCCache->status == 1))
+            ) {
+                array_push($tempArray, 'OC status != import status');
+            } else {
+                array_push($tempArray, '');
+            }
+
+            if ((($fetchedListingInfo->nodeListingArchived == true) && ($fetchedOCCache->status != 3))
+                || (($fetchedListingInfo->nodeListingAvailable
+                     == false)
+                    && ($fetchedOCCache->status == 3))
+            ) {
+                array_push($tempArray, 'OC status != import status');
+            } else {
+                array_push($tempArray, '');
+            }
+
+            if (count($tempArray) != 1) {
+                array_push($differencesDetected, $tempArray);
+            }
+        }
+
+        return ($differencesDetected);
+    }
+
+    /**
+     * @return array
+     */
+    public function list_all_support_listing_infos()
+    : array
+    {
+        try {
+            return ($this->supportListingInfosRepository->fetchAll());
+        } catch (Exception $exception) {
+            return ([]);
+        }
+    }
+
+    /**
+     * @param array $waypoints_as_array
+     *
+     * @return array
+     * @throws DBALException
+     * @throws InvalidArgumentException
+     * @throws RecordAlreadyExistsException
+     * @throws RecordNotFoundException
+     * @throws RecordNotPersistedException
+     */
+    public function check_array_for_Oc_Gc_relations(array $waypoints_as_array)
+    : array {
+        // Jeden importierten Cache im Array einzeln durchgehen..
+        // in DB caches/* prüfen, ob ein OC-Cache zugeordnet werden kann
+        //   wenn ja:
+        //      Wegpunkt des OC-Caches im aktuell geprüften Cache/Array reinschreiben
+        //      in DB support_listing_info schauen, ob bereits ein gleicher Eintrag wie der aktuelle Cache/Array vorhanden ist
+        //        wenn ja:
+        //          Unterschiede auslesen und in support_listing_comments/comment schreiben
+        //          alten Eintrag löschen
+        //          neuen Eintrag in support_listing_info schreiben
+        //        wenn nein:
+        //          -
+        //   wenn nein:
+        //      Bearbeitung des aktuell geprüften Caches/Array beenden
+        //
+        $amountAssignedCaches = 0;
+        $amountUpdatedCaches = 0;
+        $listOfAmbiguousCaches = '';
+
+        foreach ($waypoints_as_array as $wpt) {
+            try {
+                $fetchedWpGcCaches = $this->cachesRepository->fetchBy(['wp_gc' => $wpt['node_listing_wp']]);
+                $fetchedWpGcMaintainedCaches = $this->cachesRepository->fetchBy(['wp_gc_maintained' => $wpt['node_listing_wp']]);
+            } catch (Exception $exception) {
+            }
+
+            if (count($fetchedWpGcCaches) == 1) {
+                $wpt['wp_oc'] = $fetchedWpGcCaches[0]->wpOc;
+            } elseif (count($fetchedWpGcMaintainedCaches) == 1) {
+                $wpt['wp_oc'] = $fetchedWpGcMaintainedCaches[0]->wpOc;
+            } elseif (count($fetchedWpGcCaches) > 1 or count($fetchedWpGcMaintainedCaches) > 1) {
+                $listOfAmbiguousCaches .= $wpt['node_listing_wp'] . ', ';
+            }
+
+            if ($wpt['wp_oc'] != - 1) {
+                $fetchedExistingSupportListingInfoArray = [];
+                $fetchedExistingSupportListingInfo = [];
+                $newComment = '';
+
+                try {
+                    $fetchedExistingSupportListingInfo =
+                        $this->supportListingInfosRepository->fetchOneBy(['node_listing_id' => $wpt['node_listing_id']]);
+                    $fetchedExistingSupportListingInfoArray =
+                        $this->supportListingInfosRepository->getDatabaseArrayFromEntity($fetchedExistingSupportListingInfo);
+                } catch (Exception $exception) {
+                }
+
+                if (!empty($fetchedExistingSupportListingInfoArray)) {
+                    foreach ([
+                        'node_listing_name',
+                        'node_listing_size',
+                        'node_listing_difficulty',
+                        'node_listing_terrain',
+                        'node_listing_coordinates_lon',
+                        'node_listing_coordinates_lat',
+                        'node_listing_available',
+                        'node_listing_archived'
+                    ] as $checkItem) {
+                        if ($wpt[$checkItem] != $fetchedExistingSupportListingInfoArray[$checkItem]) {
+                            $newComment .= $checkItem
+                                           . ' changed from '
+                                           . $fetchedExistingSupportListingInfoArray[$checkItem]
+                                           . ' to '
+                                           . $wpt[$checkItem]
+                                           . PHP_EOL;
+                        }
+                    }
+
+                    if ($newComment != '') {
+                        $newComment =
+                            date('Y-m-d H:i:s')
+                            . ' -automatically generated comment-:'
+                            . PHP_EOL
+                            . 'Data import from foreign node via GPX for '
+                            . $fetchedExistingSupportListingInfoArray['node_listing_wp']
+                            . PHP_EOL
+                            . $newComment
+                            . PHP_EOL;
+
+                        try {
+                            $entity = $this->supportListingCommentsRepository->fetchOneBy(['wp_oc' => $wpt['wp_oc']]);
+                        } catch (Exception $exception) {
+                            $entity = $this->supportListingCommentsRepository->create(new SupportListingCommentsEntity($wpt['wp_oc']));
+                        }
+
+                        $entity->comment = $newComment . $entity->comment;
+                        $this->supportListingCommentsRepository->update($entity);
+                    }
+
+                    $this->supportListingInfosRepository->remove($fetchedExistingSupportListingInfo);
+                }
+
+                $wpt['importstatus'] = self::IMPORT_STATUS_FINISHED;
+                $entity = $this->supportListingInfosRepository->getEntityFromDatabaseArray($wpt);
+                $this->supportListingInfosRepository->create($entity);
+
+                $amountAssignedCaches ++;
+            }
+        }
+
+        return ([$amountAssignedCaches, $amountUpdatedCaches, $listOfAmbiguousCaches]);
+    }
+
+    /**
+     * @param string $filemane
+     *
+     * @return array
+     * @throws RecordNotFoundException
+     */
+    public function read_Xml_file_and_get_array(string $filemane)
+    : array {
+        $strData = file_get_contents($filemane);
+        $strData = str_replace(['<groundspeak:', '</groundspeak:'], ['<', '</'], $strData);
+
+        if ($strData === false || $strData === '') {
+            return ([]);
+        } else {
+            $objXmlDocument = simplexml_load_string($strData);
+
+            $objJsonDocument = json_encode($objXmlDocument);
+            $arrOutput = json_decode($objJsonDocument, true);
+
+            // Array auseinandernehmen und in ein datenbankfähiges Format umwandeln (für Tabelle support_listing_infos)
+            $waypoints_as_array = [];
+
+            foreach ($arrOutput['wpt'] as $wpt) {
+                $wpt_array['wp_oc'] = - 1;
+                $wpt_array['node_id'] = $this->nodesRepository->get_id_by_prefix(substr($wpt['name'], 0, 2));
+                $wpt_array['node_owner_id'] =
+                    0; // TODO: node_owner_id ist in Groundspeak GPX-Dateien nicht enthalten. Aber eventuell in anderen Quellen?
+                $wpt_array['node_owner_name'] = $wpt['cache']['owner'];
+                $wpt_array['node_listing_id'] = substr($wpt['url'], strlen($wpt['url']) - 36, 36);
+                $wpt_array['node_listing_wp'] = $wpt['name'];
+                $wpt_array['node_listing_name'] = $wpt['cache']['name'];
+                $wpt_array['node_listing_size'] = $wpt['cache']['container'];
+                $wpt_array['node_listing_difficulty'] = $wpt['cache']['difficulty'] * 2;
+                $wpt_array['node_listing_terrain'] = $wpt['cache']['terrain'] * 2;
+                $wpt_array['node_listing_coordinates_lat'] = $wpt['@attributes']['lat'];
+                $wpt_array['node_listing_coordinates_lon'] = $wpt['@attributes']['lon'];
+                $wpt_array['node_listing_available'] = ($wpt['cache']['@attributes']['available'] === "True") ? 1 : 0;
+                $wpt_array['node_listing_archived'] = ($wpt['cache']['@attributes']['archived'] === "True") ? 1 : 0;
+                $wpt_array['importstatus'] = self::IMPORT_STATUS_NEW;
+
+                array_push($waypoints_as_array, $wpt_array);
+            }
+
+            return ($waypoints_as_array);
+        }
     }
 }

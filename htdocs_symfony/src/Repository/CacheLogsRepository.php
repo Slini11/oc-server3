@@ -132,10 +132,6 @@ class CacheLogsRepository
 
         $result = $statement->fetchAll();
 
-        if ($statement->rowCount() === 0) {
-//            throw new RecordsNotFoundException('No records with given where clause found');
-        }
-
         $entities = [];
 
         foreach ($result as $item) {
@@ -190,7 +186,7 @@ class CacheLogsRepository
     public function getCountPictures(array $where = []): int
     {
         $queryBuilder = $this->connection->createQueryBuilder()
-            ->select('SUM(picture)')
+            ->select('COALESCE(SUM(picture),0)')
             ->from(self::TABLE);
 
         if (count($where) > 0) {

@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Oc\Repository;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception\InvalidArgumentException;
 use Oc\Entity\UserEntity;
 use Oc\Repository\Exception\RecordAlreadyExistsException;
 use Oc\Repository\Exception\RecordNotFoundException;
@@ -25,6 +29,7 @@ class UserRepository
      * @var Connection
      */
     private $connection;
+
     /**
      * @var SecurityRolesRepository
      */
@@ -34,7 +39,7 @@ class UserRepository
      * @param Connection $connection
      * @param SecurityRolesRepository $securityRolesRepository
      */
-    public function __construct(Connection $connection, SecurityRolesRepository  $securityRolesRepository)
+    public function __construct(Connection $connection, SecurityRolesRepository $securityRolesRepository)
     {
         $this->connection = $connection;
         $this->securityRolesRepository = $securityRolesRepository;
@@ -43,10 +48,11 @@ class UserRepository
     /**
      * Fetches all users.
      *
-     * @throws RecordsNotFoundException Thrown when no records are found
      * @return UserEntity[]
+     * @throws RecordsNotFoundException Thrown when no records are found
      */
-    public function fetchAll(): array
+    public function fetchAll()
+    : array
     {
         $statement = $this->connection->createQueryBuilder()
             ->select('*')
@@ -63,12 +69,42 @@ class UserRepository
     }
 
     /**
+     * @param array $where
+     *
+     * @return UserEntity
+     * @throws RecordNotFoundException
+     */
+    public function fetchOneBy(array $where = [])
+    : UserEntity {
+        $queryBuilder = $this->connection->createQueryBuilder()
+            ->select('*')
+            ->from(self::TABLE)
+            ->setMaxResults(1);
+
+        if (count($where) > 0) {
+            foreach ($where as $column => $value) {
+                $queryBuilder->andWhere($column . ' = ' . $queryBuilder->createNamedParameter($value));
+            }
+        }
+
+        $statement = $queryBuilder->execute();
+
+        $result = $statement->fetch();
+
+        if ($statement->rowCount() === 0) {
+            throw new RecordNotFoundException('Record with given where clause not found');
+        }
+
+        return $this->getEntityFromDatabaseArray($result);
+    }
+
+    /**
      * Fetches a user by its id.
      *
      * @throws RecordNotFoundException Thrown when the request record is not found
      */
-    public function fetchOneById(int $id): UserEntity
-    {
+    public function fetchOneById(int $id)
+    : UserEntity {
         $statement = $this->connection->createQueryBuilder()
             ->select('*')
             ->from(self::TABLE)
@@ -79,10 +115,12 @@ class UserRepository
         $result = $statement->fetch();
 
         if ($statement->rowCount() === 0) {
-            throw new RecordNotFoundException(sprintf(
-                'Record with id #%s not found',
-                $id
-            ));
+            throw new RecordNotFoundException(
+                sprintf(
+                    'Record with id #%s not found',
+                    $id
+                )
+            );
         }
 
         return $this->getEntityFromDatabaseArray($result);
@@ -95,10 +133,9 @@ class UserRepository
      *
      * @return UserEntity
      * @throws RecordNotFoundException
-     * @throws RecordsNotFoundException
      */
-    public function fetchOneByUsername(string $username): UserEntity
-    {
+    public function fetchOneByUsername(string $username)
+    : UserEntity {
         $statement = $this->connection->createQueryBuilder()
             ->select('*')
             ->from(self::TABLE)
@@ -109,10 +146,12 @@ class UserRepository
         $result = $statement->fetch();
 
         if ($statement->rowCount() === 0) {
-            throw new RecordNotFoundException(sprintf(
-                'Record with username "%s" not found',
-                $username
-            ));
+            throw new RecordNotFoundException(
+                sprintf(
+                    'Record with username "%s" not found',
+                    $username
+                )
+            );
         }
 
         $user = $this->getEntityFromDatabaseArray($result);
@@ -129,10 +168,10 @@ class UserRepository
      *
      * @return UserEntity
      * @throws RecordAlreadyExistsException
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    public function create(UserEntity $entity): UserEntity
-    {
+    public function create(UserEntity $entity)
+    : UserEntity {
         if (!$entity->isNew()) {
             throw new RecordAlreadyExistsException('The user entity already exists');
         }
@@ -144,7 +183,7 @@ class UserRepository
             $databaseArray
         );
 
-        $entity->id = (int) $this->connection->lastInsertId();
+        $entity->userId = (int) $this->connection->lastInsertId();
 
         return $entity;
     }
@@ -156,23 +195,24 @@ class UserRepository
      *
      * @return UserEntity
      * @throws RecordNotPersistedException
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    public function update(UserEntity $entity): UserEntity
-    {
+    public function update(UserEntity $entity)
+    : UserEntity {
         if ($entity->isNew()) {
             throw new RecordNotPersistedException('The entity does not exist.');
         }
-
         $databaseArray = $this->getDatabaseArrayFromEntity($entity);
+        //        dd($databaseArray);
+        //        die();
 
         $this->connection->update(
             self::TABLE,
             $databaseArray,
-            ['user_id' => $entity->id]
+            ['user_id' => $entity->userId]
         );
 
-        $entity->id = (int) $this->connection->lastInsertId();
+        $entity->userId = (int) $this->connection->lastInsertId();
 
         return $entity;
     }
@@ -184,23 +224,34 @@ class UserRepository
      *
      * @return UserEntity
      * @throws RecordNotPersistedException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\DBAL\Exception\InvalidArgumentException
+     * @throws DBALException
+     * @throws InvalidArgumentException
      */
-    public function remove(UserEntity $entity): UserEntity
-    {
+    public function remove(UserEntity $entity)
+    : UserEntity {
         if ($entity->isNew()) {
             throw new RecordNotPersistedException('The entity does not exist.');
         }
 
         $this->connection->delete(
             self::TABLE,
-            ['user_id' => $entity->id]
+            ['user_id' => $entity->userId]
         );
 
-        $entity->id = null;
+        $entity->userId = null;
 
         return $entity;
+    }
+
+    /**
+     * generate an activation code (e.g. for user registration)
+     *
+     * @return string
+     */
+    public function generateActivationCode()
+    : string
+    {
+        return mb_strtoupper(mb_substr(md5(uniqid('', true)), 0, 13));
     }
 
     /**
@@ -208,8 +259,8 @@ class UserRepository
      *
      * @return UserEntity[]
      */
-    private function getEntityArrayFromDatabaseArray(array $result): array
-    {
+    private function getEntityArrayFromDatabaseArray(array $result)
+    : array {
         $languages = [];
 
         foreach ($result as $item) {
@@ -222,10 +273,10 @@ class UserRepository
     /**
      * Maps the given entity to the database array.
      */
-    public function getDatabaseArrayFromEntity(UserEntity $entity): array
-    {
+    public function getDatabaseArrayFromEntity(UserEntity $entity)
+    : array {
         return [
-            'user_id' => $entity->id,
+            'user_id' => $entity->userId,
             'date_created' => $entity->dateCreated,
             'last_modified' => $entity->lastModified,
             'username' => $entity->username,
@@ -238,18 +289,21 @@ class UserRepository
             'first_name' => $entity->firstname,
             'last_name' => $entity->lastname,
             'country' => $entity->country,
+            'permanent_login_flag' => $entity->permanentLoginFlag,
             'activation_code' => $entity->activationCode,
             'language' => $entity->language,
+            'description' => $entity->description,
+            'gdpr_deletion' => $entity->gdprDeletion,
         ];
     }
 
     /**
      * Prepares database array from properties.
      */
-    public function getEntityFromDatabaseArray(array $data): UserEntity
-    {
+    public function getEntityFromDatabaseArray(array $data)
+    : UserEntity {
         $entity = new UserEntity();
-        $entity->id = (int) $data['user_id'];
+        $entity->userId = (int) $data['user_id'];
         $entity->dateCreated = (string) $data['date_created'];
         $entity->lastModified = (string) $data['last_modified'];
         $entity->username = $data['username'];
@@ -262,8 +316,12 @@ class UserRepository
         $entity->firstname = $data['first_name'];
         $entity->lastname = $data['last_name'];
         $entity->country = $data['country'];
+        $entity->permanentLoginFlag = $data['permanent_login_flag'];
         $entity->activationCode = $data['activation_code'];
         $entity->language = strtolower($data['language']);
+        $entity->description = $data['description'];
+        $entity->gdprDeletion = $data['gdpr_deletion'];
+        $entity->roles = $this->securityRolesRepository->fetchUserRoles($entity);
 
         return $entity;
     }
