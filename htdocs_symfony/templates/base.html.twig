@@ -1,5 +1,4 @@
-{# original source code for this file: see '@AdminLTE/layout/default-layout.html.twig' #}
-{# direkt: htdocs_symfony/vendor/kevinpapst/adminlte-bundle/Resources/views/layout #}
+
 
 <!DOCTYPE html{% block html_start %}{% endblock %}>
 <html lang="{{ app.request.locale }}">
@@ -10,208 +9,113 @@
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     {% endblock %}
 
-    <title>{% block title %}{{ block('page_title') }}Geocaching mit Opencaching.de{% endblock %}</title>
+    <title>{% block title %}Geocaching mit Opencaching.de{% endblock %}</title>
+
 
     {% block stylesheets %}
-        <link rel="stylesheet" href="{{ asset('bundles/adminlte/adminlte.css') }}">
-        <link rel="stylesheet" href="{{ asset('build/oc-style.css') }}">
+        <link rel="stylesheet" href="{{ asset('build/bs4.scss') }}">
+        <!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+-->
     {% endblock %}
+
+    {% block javascripts %}
+        <!-- <script href="{{ asset('build/vendors~shared.js') }}"></script> -->
+        <!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>-->
+
+    {% endblock %}
+
+    <style>
+        .bd-placeholder-img {
+            font-size: 1.125rem;
+            text-anchor: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+        }
+
+        @media (min-width: 768px) {
+            .bd-placeholder-img-lg {
+                font-size: 3.5rem;
+            }
+        }
+
+        .b-example-divider {
+            height: 3rem;
+            background-color: rgba(0, 0, 0, .1);
+            border: solid rgba(0, 0, 0, .15);
+            border-width: 1px 0;
+            box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
+        }
+
+        .b-example-vr {
+            flex-shrink: 0;
+            width: 1.5rem;
+            height: 100vh;
+        }
+
+        .bi {
+            vertical-align: -.125em;
+            fill: currentColor;
+        }
+
+        .nav-scroller {
+            position: relative;
+            z-index: 2;
+            height: 2.75rem;
+            overflow-y: hidden;
+        }
+
+        .nav-scroller .nav {
+            display: flex;
+            flex-wrap: nowrap;
+            padding-bottom: 1rem;
+            margin-top: -1px;
+            overflow-x: auto;
+            text-align: center;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
+
+
 </head>
+<body>
 
-{# Apply one of the following classes for the skin: skin-blue, skin-black, skin-purple, skin-yellow, skin-red, skin-green #}
-{# Apply one or more of the following classes for the layout options: fixed, layout-boxed, layout-top-nav, sidebar-collapse, sidebar-mini #}
-<body{% block body_start %}{% endblock %} class="hold-transition sidebar-collapse {{ admin_lte_context.skin | default("") | body_class }}">
-{% block after_body_start %}{% endblock %}
-<div class="wrapper">
-    <header class="main-header">
-        <a href="{% block logo_path %}{{ path('adminlte_welcome' | route_alias) }}{% endblock %}" class="logo">
-            <span class="logo-mini">
-                {% block logo_mini %}<b>OC</b>de{% endblock %}
-            </span>
-            <span class="logo-lg">
-               {% block logo_large %} <b>Opencaching.de</b>{% endblock %}
-            </span>
-        </a>
-
-        <nav class="main-header navbar navbar-expand navbar-white navbar-light" role="navigation">
-            {% block navbar_toggle %}
-                <a href="#" class="sidebar-toggle col-md-1" data-toggle="push-menu" role="button">
-                    <span class="sr-only">{{ 'Toggle navigation' | trans }}</span>
-                </a>
-            {% endblock %}
-
-            {# TODO: CSS anpassen #}
-            <div class="container container-fluid col-md-10">
-                <div class="row col-md">
-                    <div class="col-md-5">
-                    </div>
-                    <div class="col-md-5 text-md-right align-self-center">
-                        {% block navbar_search_form %}
-                            <!-- SEARCH FORM -->
-                            {# TODO: Suchformular noch funktionsfähig machen.. #}
-                            {# TODO: nur anzeigen, wenn Bildschirm breit genug ist.. #}
-
-                            {#    <form class="form-inline ml-6"> #}
-                            <div class="input-group mb-3">
-                                <input class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search"
-                                       aria-describedby="button-magnifier">
-                                <div class="input-group-append">
-                                    <span class="input-group-text" id="button-magnifier"><i class="fas fa-search"></i></span>
-                                </div>
-                            </div>
-                            {#    </form> #}
-                        {% endblock %}
-
-                    </div>
-                    <div class="col-md-2 text-md-right">
-                        {% block navbar_right %}
-                            {% if app.user %}
-                                <!-- Right navbar links -->
-                                <ul class="navbar-nav ml-auto">
-                                    <!-- Logout icon -->
-                                    <li class="nav-item dropdown">
-                                        <a href="{{ path('app_security_logout') }}">{{ 'Logout' | trans }}</a>
-                                    </li>
-
-                                    <!-- Messages Dropdown Menu -->
-                                    <li class="nav-item dropdown">
-                                        {# TODO: statt der Mustertexte und -nutzer was Richtiges einbauen.. #}
-                                        <a class="nav-link" data-toggle="dropdown" href="#">
-                                            <i class="far fa-comments"></i>
-                                            <span class="badge badge-danger navbar-badge">2</span>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                                            <a href="#" class="dropdown-item">
-                                                <!-- Message Start -->
-                                                <div class="media">
-                                                    <img src="../user1-128x128.jpg" alt="User Avatar" class="img-size-50 mr-3 img-circle">
-                                                    <div class="media-body">
-                                                        <h3 class="dropdown-item-title">
-                                                            Max Mustermann
-                                                            <span class="float-right text-sm text-danger"><i class="fas fa-star"></i></span>
-                                                        </h3>
-                                                        <p class="text-sm">Ruf mich an...</p>
-                                                        <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> 4 Hours Ago</p>
-                                                    </div>
-                                                </div>
-                                                <!-- Message End -->
-                                            </a>
-                                            <div class="dropdown-divider"></div>
-                                            <a href="#" class="dropdown-item">
-                                                <!-- Message Start -->
-                                                <div class="media">
-                                                    <img src="../user2-128x128.jpg" alt="User Avatar" class="img-size-50 img-circle mr-3">
-                                                    <div class="media-body">
-                                                        <h3 class="dropdown-item-title">
-                                                            Klara
-                                                            <span class="float-right text-sm text-muted"><i class="fas fa-star"></i></span>
-                                                        </h3>
-                                                        <p class="text-sm">I got your message bro</p>
-                                                        <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> 4 Hours Ago</p>
-                                                    </div>
-                                                </div>
-                                                <!-- Message End -->
-                                            </a>
-                                            <div class="dropdown-divider"></div>
-                                            <a href="#" class="dropdown-item dropdown-footer">See All Messages</a>
-                                        </div>
-                                    </li>
-
-                                    <!-- Notifications Dropdown Menu -->
-                                    <li class="nav-item dropdown">
-                                        {# TODO: statt der Musternachrichten was Richtiges einbauen.. #}
-                                        <a class="nav-link" data-toggle="dropdown" href="#">
-                                            <i class="far fa-bell"></i>
-                                            <span class="badge badge-warning navbar-badge">15</span>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                                            <span class="dropdown-header">15 Notifications</span>
-                                            <div class="dropdown-divider"></div>
-                                            <a href="#" class="dropdown-item">
-                                                <i class="fas fa-envelope mr-2"></i> 4 new messages
-                                                <span class="float-right text-muted text-sm">3 mins</span>
-                                            </a>
-                                            <div class="dropdown-divider"></div>
-                                            <a href="#" class="dropdown-item">
-                                                <i class="fas fa-users mr-2"></i> 8 friend requests
-                                                <span class="float-right text-muted text-sm">12 hours</span>
-                                            </a>
-                                            <div class="dropdown-divider"></div>
-                                            <a href="#" class="dropdown-item">
-                                                <i class="fas fa-file mr-2"></i> 3 new reports
-                                                <span class="float-right text-muted text-sm">2 days</span>
-                                            </a>
-                                            <div class="dropdown-divider"></div>
-                                            <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
-                                        </div>
-                                    </li>
-                                </ul>
-                            {% else %}
-                                <!-- Login/Register/Activation icon -->
-                                <div>
-                                    <a href="{{ path('app_security_login') }}">{{ 'Login' | trans }}</a>
-                                </div>
-                                <div>
-                                    <a href="{{ path('app_security_register') }}">{{ 'Register' | trans }}</a>
-                                </div>
-                                <div>
-                                    <a href="{{ path('app_security_account_activation') }}">{{ 'Activate account' | trans }}</a>
-                                </div>
-                            {% endif %}
-                        {% endblock %}
-                    </div>
-                </div>
-            </div>
-
-            <div class="navbar-custom-menu">
-                <ul class="nav navbar-nav">
-                    {% block navbar_start %}{% endblock %}
-                    {% block navbar_messages %}
-                        {% include '@AdminLTE/Navbar/messages.html.twig' with {'adminlte_direct_include': true} %}
-                    {% endblock %}
-                    {% block navbar_notifications %}
-                        {% include '@AdminLTE/Navbar/notifications.html.twig' with {'adminlte_direct_include': true} %}
-                    {% endblock %}
-                    {% block navbar_tasks %}
-                        {% include '@AdminLTE/Navbar/tasks.html.twig' with {'adminlte_direct_include': true} %}
-                    {% endblock %}
-                    {% block navbar_user %}
-                        {% include '@AdminLTE/Navbar/user.html.twig' with {'adminlte_direct_include': true} %}
-                    {% endblock %}
-                    {% block navbar_end %}{% endblock %}
-                    {% block navbar_control_sidebar_toggle %}
-                        {% if admin_lte_context.control_sidebar is defined and admin_lte_context.control_sidebar is not empty %}
-                            <li>
-                                <a href="#" data-toggle="control-sidebar"><i class="fas fa-cogs"></i></a>
-                            </li>
-                        {% endif %}
-                    {% endblock %}
+<header>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand d-none d-sm-block" href="#">Carousel</a>
+            <a class="navbar-brand d-sm-none" href="#"><a class="btn btn-secondary me-auto d-sm-none" href="javascript:history.back()"><i class="fa-solid fa-arrow-left"></i></a> </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav me-auto order-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/backend">Backend</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/caches">Suche</a>
+                    </li>
                 </ul>
+                <form class="d-flex ms-auto order-5" role="search">
+                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
             </div>
-        </nav>
-    </header>
+        </div>
+    </nav>
+</header>
 
-    <aside class="main-sidebar">
-        <section class="sidebar">
-            {% block sidebar_user %}
-                {% if app.user is not null and is_granted('IS_AUTHENTICATED_FULLY') %}
-                    {% include '@AdminLTE/Sidebar/user-panel.html.twig' with {'adminlte_direct_include': true} %}
-                {% endif %}
-            {% endblock %}
-
-            {% block sidebar_search %}
-{# {% include '@AdminLTE/Sidebar/search-form.html.twig' with {'adminlte_direct_include': true} %} #}
-            {% endblock %}
-
-            {% block sidebar_nav %}
-                {% if admin_lte_context.knp_menu.enable %}
-                    {% include '@AdminLTE/Sidebar/knp-menu.html.twig' %}
-                {% else %}
-                    {% include '@AdminLTE/Sidebar/menu.html.twig' with {'adminlte_direct_include': true} %}
-                {% endif %}
-            {% endblock %}
-        </section>
-    </aside>
+<main>
 
     <div class="content-wrapper">
         <section class="content-header">
@@ -220,19 +124,13 @@
                 <small>{% block page_subtitle %}{% endblock %}</small>
             </h1>
 
-            {% block breadcrumb %}
-                {% if admin_lte_context.knp_menu.enable %}
-                    {% include '@AdminLTE/Breadcrumb/knp-breadcrumb.html.twig' %}
-                {% else %}
-                    {% include '@AdminLTE/Breadcrumb/breadcrumb.html.twig' with {'adminlte_direct_include': true} %}
-                {% endif %}
-            {% endblock %}
+
         </section>
 
         {% block page_content_before %}{% endblock %}
 
         <section class="{% block page_content_class %}content{% endblock %}">
-            {% block page_content_start %}{{ include('@AdminLTE/Partials/_flash_messages.html.twig') }}{% endblock %}
+            {% block page_content_start %}{% endblock %}
             {% block page_content %}{% endblock %}
             {% block page_content_end %}{% endblock %}
         </section>
@@ -240,23 +138,49 @@
         {% block page_content_after %}{% endblock %}
     </div>
 
-    {% block footer %}
-        <footer class="main-footer ">
-            {# TODO: Links anpassen sobald verfügbar.. #}
-            <a href="#">{{ 'Privacy policy' | trans }}</a>
-            ,
-            <a href="#">{{ 'Imprint' | trans }}</a>
-            ,
-            <a href="#">{{ 'Contact' | trans }}</a>
-            ,
-            <i class="fas fa-copyright"></i> opencaching.de {{ "now" | date("Y") }}
-        </footer>
-    {% endblock %}
-</div>
 
-{% block javascripts %}
-    <script src="{{ asset('bundles/adminlte/adminlte.js') }}"></script>
-{% endblock %}
+    <!-- FOOTER -->
+    {% block footer %}
+    <footer class="fixed-bottom d-sm-none">
+        <div class="px-3 py-2 text-bg-dark border-bottom">
+            <div class="container">
+                <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+
+                    <ul class="nav col-12 col-lg-auto my-2 justify-content-center my-md-0 text-small">
+                        <li>
+                            <a href="/" class="nav-link text-secondary">
+                                <i class="fa-solid fa-house"></i><br />
+                                Home
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/maps" class="nav-link text-white">
+                                <i class="fa-solid fa-map"></i><br />
+                                Karte
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/caches" class="nav-link text-white">
+                                <i class="fa-solid fa-magnifying-glass"></i><br />
+                                Suche
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/user" class="nav-link text-white">
+                                <i class="fa-solid fa-user"></i><br />
+                                Profil
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <p class="float-end"><a href="#">Back to top</a></p>
+        <p>&copy; 2017–2022 Company, Inc. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
+    </footer>
+    {% endblock %}
+
+</main>
 
 </body>
 </html>

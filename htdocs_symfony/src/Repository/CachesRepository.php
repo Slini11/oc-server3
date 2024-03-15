@@ -390,7 +390,7 @@ class CachesRepository
         //        OR caches.name     LIKE    "%' . $searchtext . '%"'
         //        OR user.username   LIKE    "%' . $searchtext . '%"'
         $qb = $this->connection->createQueryBuilder();
-        $qb->select('caches.cache_id', 'caches.name', 'caches.wp_oc', 'caches.wp_gc', 'user.username')
+        $qb->select('caches.cache_id', 'caches.name', 'caches.wp_oc', 'caches.wp_gc', 'user.username', 'caches.difficulty', 'caches.terrain', 'caches.size', 'caches.type')
                 ->from('caches')
                 ->innerJoin('caches', 'user', 'user', 'caches.user_id = user.user_id')
                 ->where('caches.wp_oc = :searchTerm')
